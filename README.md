@@ -54,14 +54,14 @@ StackResume is built to live on **your** infrastructure — a laptop, a homelab 
 - **No SaaS, no telemetry, no tracking.** The container talks to one place: whichever LLM provider *you* configure. Nothing else leaves the box.
 - **Bring your own key — or skip keys entirely.** Plug in OpenAI / Anthropic / Google Gemini, or point at a local [Ollama](https://ollama.com) install for fully **offline, zero-cost** inference. No vendor lock-in.
 - **Open source under GPL-3.0.** Read it, audit it, fork it, patch it. The whole pipeline — agents, prompts, document renderers — is in this repo.
-- **One container, anywhere Docker runs.** Multi-arch image (`amd64`, `arm64`, `armv7`) — runs on a Raspberry Pi just as happily as on a bare-metal server.
+- **One container, anywhere Docker runs.** Multi-arch image (`amd64`, `arm64`) — runs on a Raspberry Pi just as happily as on a bare-metal server.
 - **Optional single-user auth.** Flip one env var to put it behind SHA-512 + session-token login if you expose it on a LAN or behind a tunnel.
 
 ---
 
 ## Quick start (Docker)
 
-No clone needed — pull the pre-built multi-arch image (`amd64` / `arm64` / `armv7`) straight from [Docker Hub](https://hub.docker.com/r/sathvikrao/stackresume).
+No clone needed — pull the pre-built multi-arch image (`amd64` / `arm64`) straight from [Docker Hub](https://hub.docker.com/r/sathvikrao/stackresume).
 
 **Minimal:**
 
