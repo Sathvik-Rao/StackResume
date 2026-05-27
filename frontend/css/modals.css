@@ -1,0 +1,51 @@
+/* Modal overlay, base modal shell, generic form controls (.fg/.fl/.fi), action buttons, template picker, and the floating toast. */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:999;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.ov.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:16px;width:520px;max-width:95vw;padding:24px;position:relative;max-height:90vh;overflow-y:auto}
+.modal::-webkit-scrollbar{width:4px}.modal::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.modal.lg{width:680px}
+.modal-title{font-size:16px;font-weight:600;margin-bottom:18px;display:flex;align-items:center;gap:9px}
+.mx{position:absolute;top:14px;right:14px;background:none;border:none;color:var(--text3);cursor:pointer;font-size:20px;line-height:1;padding:3px}
+.mx:hover{color:var(--text)}
+
+/* Form primitives — used across every modal. */
+.fg{margin-bottom:14px}
+.fl{display:block;font-size:12.5px;font-weight:500;color:var(--text2);margin-bottom:6px}
+.fs,.fi,.fta{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:9px 11px;color:var(--text);font-family:var(--font);font-size:13.5px;outline:none;transition:border-color .15s}
+.fs:focus,.fi:focus,.fta:focus{border-color:var(--ab)}
+.fs option{background:var(--bg2)}
+.fta{resize:vertical;min-height:70px}
+.fhint{font-size:11.5px;color:var(--text3);margin-top:4px}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* Modal action row buttons */
+.ma{display:flex;gap:9px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap}
+.bsec{padding:9px 17px;background:none;border:1px solid var(--border2);border-radius:8px;color:var(--text2);font-family:var(--font);font-size:13.5px;cursor:pointer;transition:all .15s}
+.bsec:hover{background:var(--bg3);color:var(--text)}
+.bpri{padding:9px 17px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-family:var(--font);font-size:13.5px;cursor:pointer;transition:all .15s}
+.bpri:hover{background:#6970ff}
+.bdanger{padding:9px 17px;background:none;border:1px solid rgba(248,113,113,.3);border-radius:8px;color:var(--red);font-family:var(--font);font-size:13.5px;cursor:pointer;transition:all .15s}
+.bdanger:hover{background:var(--rbg)}
+.prov-sec{margin-bottom:2px}
+
+/* Memory preview chips inside the memory modal landing list. */
+.mem-preview{padding:6px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);margin-bottom:6px;font-size:12px;display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--text2);transition:all .15s}
+.mem-preview:hover{background:var(--bg4);border-color:var(--border2);color:var(--text)}
+.mem-preview-name{font-weight:500;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* PDF template picker grid + option-button row inside export modal. */
+.tmpl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.tmpl-card{border:2px solid var(--border);border-radius:10px;padding:12px 10px;cursor:pointer;transition:all .15s;text-align:center}
+.tmpl-card:hover{border-color:var(--border2);background:var(--bg3)}
+.tmpl-card.sel{border-color:var(--ab);background:var(--abg)}
+.tmpl-icon{font-size:22px;margin-bottom:6px}
+.tmpl-name{font-size:12.5px;font-weight:600;color:var(--text);margin-bottom:3px}
+.tmpl-desc{font-size:11px;color:var(--text3);line-height:1.4}
+.opt-row{display:flex;gap:6px}
+.opt-btn{flex:1;padding:7px 6px;border:1px solid var(--border);border-radius:7px;background:none;color:var(--text2);font-family:var(--font);font-size:12px;cursor:pointer;text-align:center;transition:all .12s}
+.opt-btn:hover{border-color:var(--border2);background:var(--bg3);color:var(--text)}
+.opt-btn.sel{border-color:var(--ab);background:var(--abg);color:var(--accent2)}
+
+/* Floating toast notification */
+#toast{position:fixed;top:18px;left:50%;transform:translateX(-50%) translateY(-16px);background:var(--bg3);border:1px solid var(--border2);border-radius:9px;padding:9px 16px;font-size:13px;color:var(--text);z-index:9999;opacity:0;transition:all .22s;white-space:nowrap;box-shadow:var(--shadow-md)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}

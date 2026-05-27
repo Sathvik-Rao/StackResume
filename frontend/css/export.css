@@ -1,0 +1,23 @@
+/* Export modal: side-by-side template options + live PDF/HTML preview iframe. */
+.exp-body{display:grid;grid-template-columns:280px 1fr;gap:18px;align-items:stretch}
+.exp-col{min-width:0}
+.exp-prev-wrap{display:flex;flex-direction:column;background:var(--bg3);border:1px solid var(--border);border-radius:12px;overflow:hidden;min-height:560px}
+.exp-prev-hd{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg4);border-bottom:1px solid var(--border);font-size:11.5px;color:var(--text2)}
+.exp-prev-hd .pv-name-label{font-weight:600;color:var(--text)}
+.exp-prev-hd .pv-actions{display:flex;gap:5px}
+.exp-prev-frame{flex:1;width:100%;border:none;background:#fff;min-height:520px}
+.exp-prev-empty{flex:1;display:flex;align-items:center;justify-content:center;font-size:12.5px;color:var(--text3);padding:20px;text-align:center;line-height:1.5}
+.exp-prev-spin{flex:1;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--text3);gap:8px}
+.exp-prev-spin::before{content:'';width:14px;height:14px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite}
+@media(max-width:880px){.exp-body{grid-template-columns:1fr}.exp-prev-wrap{min-height:380px;order:-1}}
+
+/* Font size slider — fine-grained nudge to avoid mid-page section/bullet breaks. */
+.fs-slider-row{display:flex;align-items:center;gap:8px;margin-top:6px}
+.fs-slider{flex:1;-webkit-appearance:none;appearance:none;height:4px;border-radius:3px;background:var(--bg4);outline:none;cursor:pointer}
+.fs-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent);border:2px solid var(--bg);cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.25)}
+.fs-slider::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--accent);border:2px solid var(--bg);cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.25)}
+.fs-slider-val{font-size:11px;color:var(--text3);font-weight:500;min-width:40px;text-align:right;font-variant-numeric:tabular-nums}
+.fs-num{width:54px;padding:3px 4px 3px 6px;background:var(--bg4);border:1px solid var(--border);border-radius:5px;color:var(--text);font-size:11.5px;font-variant-numeric:tabular-nums;text-align:right;font-family:inherit}
+.fs-num:focus{outline:none;border-color:var(--accent)}
+.fs-num::-webkit-inner-spin-button,.fs-num::-webkit-outer-spin-button{opacity:1;height:18px}
+.fs-unit{font-size:11px;color:var(--text3);font-weight:500}

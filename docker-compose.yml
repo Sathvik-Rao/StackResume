@@ -1,0 +1,79 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: stackresume-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/data
+      - ./frontend:/frontend:ro
+    environment:
+      # ── LLM Provider (defaults to Google Gemini) ───────────────────────────
+      # Override any of these in .env or via the in-app Settings → API Keys modal.
+      - LLM_PROVIDER=${LLM_PROVIDER:-google}
+      - LLM_MODEL=${LLM_MODEL:-gemini-2.5-flash}
+      - LLM_TEMPERATURE=${LLM_TEMPERATURE:-0.7}
+
+      # ── API Keys (set the one matching LLM_PROVIDER) ───────────────────────
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+
+      # ── Custom OpenAI-compatible endpoint (only used when LLM_PROVIDER=custom) ─
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-}
+
+      # ── Ollama (optional — point at a host-installed Ollama server) ────────
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+
+      # ── LangSmith tracing (optional — also configurable from the UI) ───────
+      - LANGSMITH_API_KEY=${LANGSMITH_API_KEY:-}
+      - LANGSMITH_PROJECT=${LANGSMITH_PROJECT:-stackresume}
+      - LANGSMITH_TRACING=${LANGSMITH_TRACING:-false}
+
+      # ── Optional admin auth (single user, session-based) ────────────────────
+      # Off by default. Flip AUTH_ENABLED=true and set AUTH_USERNAME/AUTH_PASSWORD
+      # to require login. Uses SHA-512 password hashing + 24h session tokens.
+      - AUTH_ENABLED=${AUTH_ENABLED:-false}
+      - AUTH_USERNAME=${AUTH_USERNAME:-admin}
+      - AUTH_PASSWORD=${AUTH_PASSWORD:-}
+
+      # ── CORS ───────────────────────────────────────────────────────────────
+      # Comma-separated allowed origins, or * (all). When AUTH_ENABLED=true
+      # and set to *, collapses to same-origin automatically.
+      - CORS_ORIGINS=${CORS_ORIGINS:-*}
+
+      # ── App ────────────────────────────────────────────────────────────────
+      - DATABASE_URL=sqlite+aiosqlite:////data/resume_builder.db
+      - MAX_REVIEW_ITERATIONS=${MAX_REVIEW_ITERATIONS:-3}
+      - MIN_QUALITY_SCORE=${MIN_QUALITY_SCORE:-82.0}
+      - DEBUG=${DEBUG:-false}
+
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # ── Test runner (opt-in via `--profile test`) ──────────────────────────────
+  # Boots the same Python image as the prod container, layers in pytest +
+  # coverage, and runs the whole suite. Stays out of the default `up`.
+  #   docker compose --profile test up --build --abort-on-container-exit
+  tests:
+    profiles: ["test"]
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.test
+    container_name: stackresume-tests
+    environment:
+      # Hard-blank any provider keys so tests never accidentally hit a real LLM.
+      - OPENAI_API_KEY=
+      - ANTHROPIC_API_KEY=
+      - GOOGLE_API_KEY=
+      - LANGSMITH_API_KEY=
+    command: pytest -ra --cov=app --cov-report=term-missing

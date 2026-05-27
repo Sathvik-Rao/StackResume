@@ -1,0 +1,24 @@
+# Test image — mirrors the production Dockerfile, then layers the dev deps on
+# top. Build it locally with:
+#   docker build -f Dockerfile.test -t stackresume-tests .
+# Or just use the compose profile:
+#   docker compose --profile test up --build --abort-on-container-exit
+FROM python:3.13-slim
+
+WORKDIR /backend
+
+# Production deps first so the cache hit pattern matches the prod image.
+COPY requirements.txt requirements-dev.txt ./
+RUN pip install --no-cache-dir -r requirements-dev.txt
+
+COPY app/ ./app/
+COPY tests/ ./tests/
+COPY pytest.ini .
+
+# Make sure no provider keys leak through the host shell.
+ENV OPENAI_API_KEY="" \
+    ANTHROPIC_API_KEY="" \
+    GOOGLE_API_KEY="" \
+    LANGSMITH_API_KEY=""
+
+CMD ["pytest", "-ra", "--cov=app", "--cov-report=term-missing"]

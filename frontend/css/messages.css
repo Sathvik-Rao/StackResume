@@ -1,0 +1,51 @@
+/* Chat messages, agent pipeline progress panel, score badges, assistant rich text. */
+.mrow{padding:14px 24px;max-width:920px;margin:0 auto;width:100%}
+.ubub{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:11px 15px;margin-left:auto;max-width:72%;font-size:14.5px;line-height:1.6;white-space:pre-wrap;color:var(--text)}
+.jd-badge{display:inline-flex;align-items:center;gap:5px;margin-top:6px;padding:3px 9px;background:var(--pbg);border:1px solid rgba(167,139,250,.3);border-radius:20px;font-size:11px;color:var(--purple)}
+.msg-meta{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text3);margin-top:4px;padding:0 2px}
+.msg-copy-btn{background:none;border:none;color:var(--text3);cursor:pointer;padding:2px 4px;border-radius:4px;display:flex;align-items:center;line-height:1;transition:color .12s,background .12s}
+.msg-copy-btn:hover{color:var(--text);background:var(--bg3)}
+.msg-copy-btn svg{width:12px;height:12px}
+
+/* Pipeline progress panel — list of agent steps with state-colored icons. */
+.prog-panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:14px}
+.prog-hdr{font-size:11.5px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.phdr-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse 1.4s ease-in-out infinite}
+.step-list{display:flex;flex-direction:column;gap:8px}
+.srow{display:flex;align-items:flex-start;gap:10px}
+.sic{width:26px;height:26px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;border:1.5px solid var(--border2);transition:background-color .28s ease,border-color .28s ease,color .28s ease}
+.sic.pend{background:var(--bg3);color:var(--text3);border-color:var(--border)}
+.sic.run{background:var(--abg);border-color:var(--ab);color:var(--accent2)}
+.sic.done{background:var(--gbg);border-color:rgba(34,211,160,.3);color:var(--green)}
+.sic.err{background:var(--rbg);border-color:rgba(248,113,113,.3);color:var(--red)}
+.sbody{flex:1;padding-top:3px;min-width:0}
+.sname{font-size:13px;font-weight:500;color:var(--text)}
+.sname.pend{color:var(--text3)}
+.snotes{font-size:11.5px;color:var(--text3);margin-top:1px;line-height:1.4;transition:color .25s ease}
+
+/* LLM event badge — small inline indicator for tool/LLM call. */
+.llm-ev-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:3px}
+.llm-ev{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;font-size:10.5px;color:var(--text3);font-family:var(--mono)}
+.llm-ev span{color:var(--text2)}
+.prompt-copy-btn{background:none;border:1px solid var(--border);color:var(--text3);cursor:pointer;padding:1px 7px;border-radius:4px;font-size:10px;font-family:var(--mono);line-height:1.7;transition:color .12s,background .12s,border-color .12s}
+.prompt-copy-btn:hover{color:var(--accent2);background:var(--abg);border-color:var(--ab)}
+
+/* Smooth pipeline spinner — a true CSS ring, no character flicker */
+.spin-ring{display:inline-block;width:14px;height:14px;border-radius:50%;
+  border:2px solid currentColor;border-top-color:transparent;
+  animation:spin .9s linear infinite}
+.step-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:currentColor;opacity:0.55}
+
+/* Score badges shown above generated resume preview. */
+.score-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+.sb2{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:7px;font-size:12px;font-weight:500;border:1px solid transparent}
+.sb2.exc{background:var(--gbg);border-color:rgba(34,211,160,.25);color:var(--green)}
+.sb2.gd{background:var(--abg);border-color:var(--ab);color:var(--accent2)}
+.sb2.fair{background:var(--ambg);border-color:rgba(245,158,11,.25);color:var(--amber)}
+.sb2.poor{background:var(--rbg);border-color:rgba(248,113,113,.25);color:var(--red)}
+.jdm{background:var(--pbg);border-color:rgba(167,139,250,.25);color:var(--purple)}
+
+/* Rich text assistant content. */
+.at{font-size:14.5px;color:var(--text);line-height:1.75;margin-bottom:14px}
+.at strong{font-weight:600}.at em{color:var(--text2);font-style:normal}
+.at ul{padding-left:20px;margin:6px 0}.at li{margin-bottom:3px}

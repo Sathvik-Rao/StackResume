@@ -1,0 +1,19 @@
+/* Usage Metrics modal: stat cards, per-provider table, daily-usage bar chart. */
+.metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:18px}
+.met-card{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px 13px}
+.met-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px}
+.met-value{font-size:20px;font-weight:600;color:var(--text);font-family:var(--font);letter-spacing:-.4px}
+.met-value.muted{color:var(--text3);font-size:14px}
+.met-table{width:100%;border-collapse:collapse;margin-top:8px;font-size:12.5px}
+.met-table th{text-align:left;font-weight:600;color:var(--text3);text-transform:uppercase;font-size:10.5px;letter-spacing:.6px;padding:7px 9px;border-bottom:1px solid var(--border)}
+.met-table td{padding:7px 9px;border-bottom:1px solid var(--border);color:var(--text2)}
+.met-table tr:last-child td{border-bottom:none}
+.met-table td.r{text-align:right;font-variant-numeric:tabular-nums;color:var(--text)}
+.met-bar{height:8px;background:var(--bg4);border-radius:5px;overflow:hidden;margin-top:8px;display:flex;align-items:center;gap:2px}
+.met-bar-cell{height:100%;background:var(--accent);min-width:1px}
+.met-bar-cell.empty{background:transparent}
+.daily-row{display:flex;gap:6px;justify-content:space-between;margin-top:6px}
+.daily-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px}
+.daily-bar{width:18px;background:var(--accent);border-radius:3px;min-height:3px}
+.daily-bar.zero{background:var(--bg4)}
+.daily-lbl{font-size:10px;color:var(--text3)}

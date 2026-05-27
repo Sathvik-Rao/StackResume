@@ -1,0 +1,2 @@
+/* Keyboard shortcut hint chips (e.g. "⌘K"). */
+.kbd{display:inline-flex;align-items:center;background:var(--bg3);border:1px solid var(--bdr);border-radius:4px;padding:1px 5px;font-size:10px;color:var(--text3);font-family:monospace;line-height:1.5}

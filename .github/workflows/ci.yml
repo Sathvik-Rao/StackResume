@@ -1,0 +1,321 @@
+name: ci
+
+# Combined CI/CD pipeline:
+#   • PRs to main          → run tests + post a "please add tests" suggestion
+#                            comment derived from the PR title/description.
+#   • Pushes to main       → run tests, auto-bump semver tag, create AI-written
+#                            GitHub release, and build/push Docker image with
+#                            `latest` + SHA tags. The tag push then triggers a
+#                            second run that adds vX.Y.Z / vX.Y / vX Docker tags.
+#   • Push of v* tag       → run tests + build/push image with full semver tags.
+#
+# Versioning (Conventional Commits — enforced via PR template):
+#   fix:  / fix(scope):          → patch bump  (0.0.x)
+#   feat: / feat(scope):         → minor bump  (0.x.0)
+#   feat!: or BREAKING CHANGE    → major bump  (x.0.0)
+#   chore:/docs:/ci:/refactor:   → no release  (skipped)
+#
+# Release notes are generated automatically by GitHub from merged PRs.
+#
+# Required repo configuration (Settings → Secrets and variables → Actions):
+#   Variables:
+#     DOCKERHUB_USERNAME   – your Docker Hub account / org
+#     DOCKERHUB_IMAGE      – (optional) image name, defaults to "stackresume"
+#   Secrets:
+#     DOCKERHUB_TOKEN      – a Docker Hub access token with Read/Write/Delete
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*.*.*"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ── 1. Tests (runs for every push to main and every PR) ──────────────────
+  test:
+    name: pytest (py${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: backend/requirements-dev.txt
+
+      - name: Install dependencies
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Run test suite with coverage
+        working-directory: backend
+        env:
+          # Make sure no real provider keys ever leak in from GitHub secrets.
+          OPENAI_API_KEY: ""
+          ANTHROPIC_API_KEY: ""
+          GOOGLE_API_KEY: ""
+        run: |
+          pytest --cov=app --cov-report=term --cov-report=xml -ra
+
+      - name: Upload coverage XML
+        if: matrix.python-version == '3.13'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-xml
+          path: backend/coverage.xml
+          if-no-files-found: warn
+
+  # ── 2. Docker build + publish (only on push to main / tag, after tests) ──
+  docker-publish:
+    name: build & push image
+    needs: test
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Compute image tags
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ vars.DOCKERHUB_USERNAME }}/${{ vars.DOCKERHUB_IMAGE || 'stackresume' }}
+          # • latest    – default branch
+          # • sha-XXXX  – short commit SHA (always present, immutable)
+          # • vX.Y.Z    – when a git tag like v1.2.3 is pushed (+ v1.2, v1)
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,format=short,prefix=sha-
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64/v8,linux/arm/v7
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ── 3. Auto semver tag + AI-written GitHub release (push to main only) ──
+  auto-release:
+    name: auto tag & release
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write   # push tags + create releases
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # need full history to walk tags
+
+      - name: Compute next semver
+        id: version
+        run: |
+          # Latest semver tag, or synthetic v0.0.0 when repo has none yet
+          LAST_TAG=$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-version:refname | head -1)
+          LAST_TAG=${LAST_TAG:-v0.0.0}
+          echo "last_tag=$LAST_TAG" >> "$GITHUB_OUTPUT"
+
+          # Commits since that tag (fall back to all commits for first release)
+          if git rev-parse "$LAST_TAG" >/dev/null 2>&1; then
+            COMMITS=$(git log "${LAST_TAG}..HEAD" --pretty=format:"%s%n%b" 2>/dev/null)
+          else
+            COMMITS=$(git log --pretty=format:"%s%n%b")
+          fi
+
+          # Skip entirely if there are no new commits
+          if [ -z "$COMMITS" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Skip if no feat:/fix: commit — only housekeeping landed
+          if ! echo "$COMMITS" | grep -qiE '^(feat|fix)(\(.+\))?!?:'; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+
+          # Determine bump type
+          BUMP="patch"
+          if echo "$COMMITS" | grep -qiE '(BREAKING[[:space:]]CHANGE|^feat(\(.+\))?!:|^fix(\(.+\))?!:)'; then
+            BUMP="major"
+          elif echo "$COMMITS" | grep -qiE '^feat(\(.+\))?:'; then
+            BUMP="minor"
+          fi
+
+          # Apply bump
+          VERSION=${LAST_TAG#v}
+          MAJOR=$(echo "$VERSION" | cut -d. -f1)
+          MINOR=$(echo "$VERSION" | cut -d. -f2)
+          PATCH=$(echo "$VERSION" | cut -d. -f3)
+          case "$BUMP" in
+            major) MAJOR=$((MAJOR+1)); MINOR=0; PATCH=0 ;;
+            minor) MINOR=$((MINOR+1)); PATCH=0 ;;
+            patch) PATCH=$((PATCH+1)) ;;
+          esac
+
+          NEW_TAG="v${MAJOR}.${MINOR}.${PATCH}"
+          echo "new_tag=$NEW_TAG" >> "$GITHUB_OUTPUT"
+          echo "bump=$BUMP" >> "$GITHUB_OUTPUT"
+
+      - name: Push tag and create GitHub release
+        if: steps.version.outputs.skip == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEW_TAG:  ${{ steps.version.outputs.new_tag }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "$NEW_TAG"
+          git push origin "$NEW_TAG"
+          # --generate-notes auto-lists every merged PR since the previous tag (free, built-in)
+          gh release create "$NEW_TAG" \
+            --title "$NEW_TAG" \
+            --generate-notes
+
+  # ── 4. PR test-coverage suggestion comment ───────────────────────────────
+  pr-test-suggestions:
+    name: suggest tests for PR
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pull-requests: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: List files changed in this PR
+        id: changes
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          {
+            echo 'files<<EOF'
+            git diff --name-only "$BASE_SHA" "$HEAD_SHA"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Post / update test-suggestion comment
+        uses: actions/github-script@v7
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          CHANGED_FILES: ${{ steps.changes.outputs.files }}
+        with:
+          script: |
+            const marker = '<!-- stackresume-test-suggestion -->';
+            const title = process.env.PR_TITLE || '(no title)';
+            const body  = (process.env.PR_BODY  || '').trim() || '_(no description provided)_';
+            const files = (process.env.CHANGED_FILES || '')
+              .split('\n').map(s => s.trim()).filter(Boolean);
+
+            const codeFiles = files.filter(f =>
+              f.startsWith('backend/app/') && f.endsWith('.py')
+            );
+            const testFiles = files.filter(f => f.startsWith('backend/tests/'));
+
+            const codeWithoutTests = codeFiles.filter(cf => {
+              const stem = cf.replace(/^backend\/app\//, '').replace(/\.py$/, '');
+              return !testFiles.some(tf => tf.includes(stem));
+            });
+
+            const lines = [];
+            lines.push(marker);
+            lines.push('### Suggested tests for this PR');
+            lines.push('');
+            lines.push(`**PR title:** ${title}`);
+            lines.push('');
+            lines.push('**PR description:**');
+            lines.push('');
+            lines.push('> ' + body.split('\n').join('\n> '));
+            lines.push('');
+
+            if (codeFiles.length === 0) {
+              lines.push('_No `backend/app/**.py` files changed — no test suggestions._');
+            } else {
+              lines.push('Based on the title, description, and changed files below, please make sure the PR includes tests that:');
+              lines.push('');
+              lines.push(`- Cover the behaviour described in **"${title}"**.`);
+              lines.push('- Exercise the happy path *and* at least one failure / edge case.');
+              lines.push('- Live under \`backend/tests/\` mirroring the changed module path.');
+              lines.push('');
+              lines.push('**Changed backend code files:**');
+              for (const f of codeFiles) lines.push(`- \`${f}\``);
+
+              if (codeWithoutTests.length) {
+                lines.push('');
+                lines.push('**These modules changed but do not appear to have matching test updates — please add tests:**');
+                for (const f of codeWithoutTests) lines.push(`- \`${f}\``);
+              } else if (testFiles.length) {
+                lines.push('');
+                lines.push('✅ Test files were updated alongside the code changes — thanks!');
+              }
+            }
+
+            const body_md = lines.join('\n');
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo:  context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body && c.body.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo:  context.repo.repo,
+                comment_id: existing.id,
+                body: body_md,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo:  context.repo.repo,
+                issue_number: context.issue.number,
+                body: body_md,
+              });
+            }

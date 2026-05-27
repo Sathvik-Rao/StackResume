@@ -1,0 +1,34 @@
+/* Cover letter "letterhead" panel, outreach email cards, and the attachment chip shown above the input. */
+.cl-wrap{display:flex;flex-direction:column;gap:12px}
+.cl-bar{display:flex;gap:6px;justify-content:flex-end}
+.cl-paper{background:var(--bg2);color:var(--text);border:1px solid var(--border2);border-radius:14px;padding:34px 44px 40px;max-width:780px;margin:0 auto;width:100%;font-family:Georgia,'Times New Roman',serif;line-height:1.65;box-shadow:var(--shadow-lg)}
+.cl-head{text-align:right;margin-bottom:8px}
+.cl-name{font-family:var(--font);font-size:18px;font-weight:600;letter-spacing:-.4px;color:var(--text)}
+.cl-contact{font-family:var(--font);font-size:11.5px;color:var(--text2);margin-top:4px;line-height:1.55}
+.cl-rule{height:2px;width:80px;background:linear-gradient(90deg,#7c83ff,#a78bfa);margin:8px 0 0 auto;border-radius:2px}
+.cl-date{font-family:var(--font);font-size:12.5px;color:var(--text2);margin:22px 0 14px}
+.cl-salutation{font-size:14px;color:var(--text);margin-bottom:12px}
+.cl-body{font-size:14px;color:var(--text2)}
+.cl-body p{margin-bottom:14px;text-align:justify}
+.cl-body p:last-child{margin-bottom:0}
+.cl-signoff{font-size:14px;color:var(--text);margin-top:14px}
+.cl-sig{font-family:var(--font);font-weight:600;font-size:14px;color:var(--text);margin-top:18px}
+
+/* Outreach email cards (one card per role). */
+.om-wrap{display:flex;flex-direction:column;gap:12px}
+.om-card{background:var(--bg);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.om-head{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;background:var(--bg3);border-bottom:1px solid var(--border);gap:8px;flex-wrap:wrap}
+.om-label{font-size:12.5px;font-weight:600;color:var(--accent2)}
+.om-actions{display:flex;gap:5px}
+.om-sub{display:flex;align-items:baseline;gap:8px;padding:6px 13px;border-bottom:1px solid var(--border);font-size:12px}
+.om-l{color:var(--text3);min-width:54px;text-transform:uppercase;letter-spacing:.6px;font-size:10.5px;font-weight:600}
+.om-v{color:var(--text);flex:1;word-break:break-word}
+.om-body{padding:12px 14px;font-size:13px;line-height:1.65;color:var(--text);white-space:pre-wrap;font-family:var(--mono);background:var(--bg)}
+
+/* Attachment chip — appears above the input when a PDF/JSON resume is attached. */
+.att-chip{display:flex;align-items:center;gap:8px;background:var(--bg2);border:1px solid var(--ab);border-radius:9px;padding:7px 11px;margin-bottom:8px;font-size:12.5px;color:var(--text)}
+.att-ic{font-size:14px}
+.att-label{font-weight:500;color:var(--accent2)}
+.att-meta{color:var(--text3);font-size:11.5px;flex:1}
+.att-x{background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;line-height:1;padding:2px 5px;border-radius:4px}
+.att-x:hover{color:var(--red);background:var(--rbg)}

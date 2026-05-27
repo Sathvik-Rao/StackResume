@@ -1,0 +1,104 @@
+/* Responsive overrides — small viewports up to 700px, narrow phones up to 400px. */
+@media(max-width:700px){
+  /* Sidebar becomes a slide-in drawer */
+  #sb{
+    position:fixed;top:0;left:0;
+    height:100vh;height:100dvh;
+    z-index:100;
+    width:var(--sw)!important;min-width:var(--sw)!important;
+    transform:translateX(-100%);
+    transition:transform .22s ease;
+    overflow:hidden;
+  }
+  #sb.mobile-open{transform:translateX(0)!important}
+  #sb.collapsed{transform:translateX(-100%)!important;width:var(--sw)!important;min-width:var(--sw)!important}
+  .sb-expand{display:none!important}
+  .mob-menu-btn{display:flex}
+
+  /* Main fills the full screen — dvh keeps it within the actual visible area on iOS */
+  #main{
+    width:100vw;min-width:0;
+    height:100vh;height:100dvh;  /* dvh excludes iOS browser chrome */
+  }
+
+  /* Chat area: must shrink so input bar is never pushed off screen */
+  #chat{flex:1;min-height:0;overflow-y:auto}
+
+  /* Welcome screen: don't force min-height:100% on mobile; let it scroll inside #chat */
+  #welcome{min-height:auto;padding:24px 16px}
+
+  /* Input area: always pinned at bottom; extra bottom padding for iOS home bar */
+  #ia{
+    flex-shrink:0;
+    padding:8px 10px 14px;
+    padding-bottom:calc(14px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Toolbar */
+  #tb{padding:0 10px;gap:8px}
+  .tb-title{font-size:13px}
+  .prov-pill{display:none}
+
+  /* Chat messages */
+  .mrow{padding:10px 12px}
+  .ubub{max-width:92%}
+
+  /* Welcome text */
+  .wc-title{font-size:22px;letter-spacing:-.4px}
+  .wc-sub{font-size:13.5px}
+  .wc-features{gap:10px 16px}
+  .wc-feat{font-size:12px}
+  .ex-grid{grid-template-columns:1fr;max-width:100%}
+  .wc-ic{width:60px;height:60px;margin-bottom:14px}
+
+  /* Input hints */
+  .hints{gap:4px}
+  .hint{font-size:11px;padding:3px 9px}
+  #mi{font-size:14px}
+
+  /* Modals */
+  .ov{align-items:flex-end}
+  .modal{
+    width:100vw!important;max-width:100vw!important;
+    border-radius:20px 20px 0 0;
+    padding:20px 16px calc(20px + env(safe-area-inset-bottom, 0px));
+    max-height:92vh;max-height:92dvh;
+  }
+  .modal.lg{width:100vw!important;max-width:100vw!important}
+  .frow{grid-template-columns:1fr!important}
+  .tmpl-grid{grid-template-columns:1fr 1fr}
+  .set-tabs{overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;padding-bottom:2px}
+  .set-tab{white-space:nowrap;font-size:12px;padding:7px 10px}
+  .ma{flex-wrap:wrap}
+
+  /* Scores */
+  .score-row{gap:5px}
+  .sb2{font-size:11px;padding:3px 8px}
+
+  /* Progress */
+  .prog-panel{padding:11px 12px}
+  .sname{font-size:12px}
+  .snotes{font-size:11px}
+
+  /* JSON viewer */
+  .jv-tb{gap:6px;flex-direction:column}
+  .jv-r{gap:4px;flex-wrap:wrap}
+  .ibtn{font-size:11px;padding:3px 7px}
+
+  /* Metrics */
+  .metrics-grid{grid-template-columns:repeat(2,1fr)}
+
+  /* Memory modal entry rows */
+  .mem-date-row{flex-direction:column}
+  .mem-date-row .fg{min-width:0}
+}
+
+@media(max-width:400px){
+  .ex-grid{gap:8px}
+  .ex-card{padding:10px 12px}
+  .wc-title{font-size:19px}
+  .hint{font-size:10.5px;padding:3px 7px}
+  .tmpl-grid{grid-template-columns:1fr}
+  .metrics-grid{grid-template-columns:1fr}
+  .ibar{gap:6px}
+}

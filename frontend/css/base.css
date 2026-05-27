@@ -1,0 +1,55 @@
+/* Reset, theme variables, body, icons, and shared keyframes. */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root,:root[data-theme="dark"]{
+  --bg:#0a0c12;--bg2:#11141d;--bg3:#171b27;--bg4:#1e2333;--bg5:#262c40;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.12);
+  --text:#e8eaf2;--text2:#9098b3;--text3:#5b6280;
+  --accent:#7c83ff;--accent2:#a4a8ff;
+  --abg:rgba(124,131,255,0.10);--ab:rgba(124,131,255,0.32);
+  --green:#22d3a0;--gbg:rgba(34,211,160,0.10);
+  --amber:#f59e0b;--ambg:rgba(245,158,11,0.10);
+  --red:#f87171;--rbg:rgba(248,113,113,0.12);
+  --purple:#a78bfa;--pbg:rgba(167,139,250,0.10);
+  --tb-bg:rgba(10,12,18,0.65);
+  --shadow-md:0 8px 28px rgba(0,0,0,0.3);
+  --shadow-lg:0 14px 40px rgba(0,0,0,0.35),0 2px 4px rgba(0,0,0,0.18);
+  --sw:268px;--r:12px;
+  --font:'Inter',system-ui,sans-serif;--mono:'JetBrains Mono',monospace;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --bg:#ffffff;--bg2:#f5f7fb;--bg3:#eef1f7;--bg4:#e2e7f0;--bg5:#d2d9e6;
+  --border:rgba(15,23,42,0.08);--border2:rgba(15,23,42,0.16);
+  --text:#1a1d2e;--text2:#475067;--text3:#7a8299;
+  --accent:#5b63ff;--accent2:#4338ca;
+  --abg:rgba(91,99,255,0.10);--ab:rgba(91,99,255,0.32);
+  --green:#059669;--gbg:rgba(5,150,105,0.10);
+  --amber:#d97706;--ambg:rgba(217,119,6,0.10);
+  --red:#dc2626;--rbg:rgba(220,38,38,0.10);
+  --purple:#7c3aed;--pbg:rgba(124,58,237,0.10);
+  --tb-bg:rgba(245,247,251,0.85);
+  --shadow-md:0 8px 28px rgba(20,30,60,0.10);
+  --shadow-lg:0 14px 40px rgba(20,30,60,0.12),0 2px 4px rgba(20,30,60,0.06);
+  color-scheme:light;
+}
+html{height:100%;height:-webkit-fill-available}
+html,body{overflow:hidden}
+body{height:100%;height:-webkit-fill-available;font-family:var(--font);background:var(--bg);color:var(--text);display:flex;font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+
+/* Inline SVG icon system */
+.ic{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;vertical-align:middle}
+.ic.sm{width:13px;height:13px}
+.ic.lg{width:20px;height:20px}
+.ic.xl{width:28px;height:28px}
+
+/* Shared animations — pulse used by sidebar/messages dots, spin by spinners. */
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{animation:spin .8s linear infinite;display:inline-block}
+
+/* Global scrollbar + button-svg click pass-through. */
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+button svg,button .ic,.hint svg,.hint .ic{pointer-events:none}
+
+/* Empty preview placeholder */
+.pv-empty{font-size:12.5px;color:var(--text3);font-style:italic;padding:6px 0}

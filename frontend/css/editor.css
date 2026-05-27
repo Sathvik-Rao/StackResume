@@ -1,0 +1,32 @@
+/* Manual resume editor — bar, section cards, list-of-objects rows, bullet rows, version menu items. */
+.ed-wrap{display:flex;flex-direction:column;gap:14px;padding:4px 2px 14px}
+.ed-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:9px 12px}
+.ed-bar-l{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--text2);flex-wrap:wrap}
+.ed-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(245,158,11,.15);color:#f59e0b;border:1px solid rgba(245,158,11,.35);border-radius:8px;padding:2px 8px;font-size:11px;font-weight:600;letter-spacing:.3px;text-transform:uppercase}
+
+/* Version-menu list items (used in the editor's "switch version" dropdown). */
+.vm-li{display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;margin:2px 0;background:transparent;border:1px solid transparent;border-radius:6px;text-align:left;cursor:pointer;color:var(--text1);font-size:13px;font-family:var(--font)}
+.vm-li:hover{background:var(--bg3)}
+.vm-li.sel{background:var(--bg3);border-color:var(--border2)}
+.vm-li-star{flex-shrink:0;font-size:13px;width:16px;text-align:center}
+.vm-li-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vm-menu-item{display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;background:transparent;border:none;border-radius:6px;text-align:left;cursor:pointer;color:var(--text1);font-size:13px;font-family:var(--font)}
+.vm-menu-item:hover{background:var(--bg3)}
+
+.ed-bar-r{display:flex;gap:6px;flex-wrap:wrap}
+.ed-sec{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.ed-sec-hd{display:flex;align-items:center;justify-content:space-between;font-size:11px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--accent2);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.ed-sec-hd-r{display:flex;gap:6px}
+.ed-row{display:grid;grid-template-columns:140px 1fr;gap:8px;align-items:start;margin-bottom:9px}
+.ed-row .fl{margin:6px 0 0;font-size:11.5px;color:var(--text3);font-weight:500}
+.ed-row input.fi,.ed-row textarea.fta{padding:7px 10px;font-size:13px}
+.ed-list-item{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:9px 10px;margin-bottom:8px;position:relative}
+.ed-list-item .ed-il-actions{position:absolute;top:6px;right:6px;display:flex;gap:4px}
+.ed-bullet-row{display:flex;gap:6px;margin-bottom:6px;align-items:flex-start}
+.ed-bullet-row .fta{min-height:34px;padding:6px 9px;font-size:12.5px}
+.ed-bullet-row .ed-rm{padding:4px 7px;font-size:11px;background:none;border:1px solid var(--border);border-radius:6px;color:var(--text3);cursor:pointer;flex-shrink:0;height:30px}
+.ed-bullet-row .ed-rm:hover{color:var(--red);border-color:rgba(248,113,113,.3);background:var(--rbg)}
+.ed-add-btn{padding:5px 11px;background:none;border:1px dashed var(--border2);border-radius:7px;color:var(--text2);font-size:11.5px;cursor:pointer;font-family:var(--font)}
+.ed-add-btn:hover{border-color:var(--accent);color:var(--accent2);background:var(--abg)}
+.ed-grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media(max-width:680px){.ed-row{grid-template-columns:1fr}.ed-grid2{grid-template-columns:1fr}}

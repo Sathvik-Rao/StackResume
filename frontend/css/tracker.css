@@ -1,0 +1,23 @@
+/* Application tracker — status badges + status-picker pill row. */
+.app-badge{display:inline-flex;align-items:center;padding:1px 6px;border-radius:10px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-left:5px;vertical-align:middle;line-height:16px}
+.app-badge.saved{background:rgba(99,102,241,.18);color:#818cf8}
+.app-badge.applied{background:rgba(139,92,246,.18);color:#a78bfa}
+.app-badge.phone_screen{background:rgba(245,158,11,.18);color:#fbbf24}
+.app-badge.interviewing{background:rgba(249,115,22,.18);color:#fb923c}
+.app-badge.offer{background:rgba(34,197,94,.18);color:#4ade80}
+.app-badge.rejected{background:rgba(239,68,68,.18);color:#f87171}
+.app-badge.withdrawn{background:rgba(148,163,184,.18);color:#94a3b8}
+.stat-pick{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}
+.stat-btn{padding:3px 10px;border-radius:20px;border:1px solid var(--bdr);background:transparent;color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;line-height:1.6;display:inline-flex;align-items:center;gap:5px}
+.stat-btn .ic{width:11px;height:11px;flex-shrink:0}
+.stat-btn:hover{border-color:var(--border2);color:var(--text)}
+.stat-btn.on{border-color:var(--accent);background:rgba(99,102,241,.15);color:var(--accent)}
+.stat-btn[data-val="applied"].on{border-color:#a78bfa;background:rgba(139,92,246,.15);color:#a78bfa}
+.stat-btn[data-val="phone_screen"].on{border-color:#fbbf24;background:rgba(245,158,11,.15);color:#fbbf24}
+.stat-btn[data-val="interviewing"].on{border-color:#fb923c;background:rgba(249,115,22,.15);color:#fb923c}
+.stat-btn[data-val="offer"].on{border-color:#4ade80;background:rgba(34,197,94,.15);color:#4ade80}
+.stat-btn[data-val="rejected"].on{border-color:#f87171;background:rgba(239,68,68,.15);color:#f87171}
+.stat-btn[data-val="withdrawn"].on{border-color:#94a3b8;background:rgba(148,163,184,.15);color:#94a3b8}
+.si-trk:hover{color:var(--accent)!important;background:rgba(99,102,241,.12)!important}
+.si-ic.trk-lit{background:linear-gradient(135deg,rgba(124,131,255,0.35),rgba(124,131,255,0.14));box-shadow:0 0 0 1.5px rgba(124,131,255,0.5)}
+.si-ic.trk-lit .ic{color:#7c83ff}

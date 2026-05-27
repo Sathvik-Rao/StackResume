@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>StackResume — AI Resume Builder for Developers</title>
+<link rel="icon" type="image/svg+xml" href="/assets/icons/favicon.svg">
+<link rel="apple-touch-icon" href="/assets/icons/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300;0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;1,14..32,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="/assets/js/theme-init.js"></script>
+<link rel="stylesheet" href="/assets/css/base.css">
+<link rel="stylesheet" href="/assets/css/sidebar.css">
+<link rel="stylesheet" href="/assets/css/layout.css">
+<link rel="stylesheet" href="/assets/css/welcome.css">
+<link rel="stylesheet" href="/assets/css/messages.css">
+<link rel="stylesheet" href="/assets/css/json-viewer.css">
+<link rel="stylesheet" href="/assets/css/preview.css">
+<link rel="stylesheet" href="/assets/css/input.css">
+<link rel="stylesheet" href="/assets/css/modals.css">
+<link rel="stylesheet" href="/assets/css/editor.css">
+<link rel="stylesheet" href="/assets/css/export.css">
+<link rel="stylesheet" href="/assets/css/letters.css">
+<link rel="stylesheet" href="/assets/css/settings.css">
+<link rel="stylesheet" href="/assets/css/metrics.css">
+<link rel="stylesheet" href="/assets/css/memory.css">
+<link rel="stylesheet" href="/assets/css/mobile.css">
+<link rel="stylesheet" href="/assets/css/tracker.css">
+<link rel="stylesheet" href="/assets/css/diff.css">
+<link rel="stylesheet" href="/assets/css/shortcuts.css">
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <symbol id="ic-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="ic-send" viewBox="0 0 24 24"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4 20-7Z"/></symbol>
+  <symbol id="ic-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="ic-attach" viewBox="0 0 24 24"><path d="M21.44 11.05 12.25 20.24a6 6 0 0 1-8.49-8.49L13 2.51a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></symbol>
+  <symbol id="ic-pencil" viewBox="0 0 24 24"><path d="M21.17 6.42 17.58 2.83a2 2 0 0 0-2.83 0L3 14.59V21h6.41l11.76-11.76a2 2 0 0 0 0-2.82Z"/><path d="m15 5 4 4"/></symbol>
+  <symbol id="ic-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="ic-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M10 11v6M14 11v6"/></symbol>
+  <symbol id="ic-settings" viewBox="0 0 24 24"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9 1.65 1.65 0 0 0 4.27 7.18l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6 1.65 1.65 0 0 0 10 3.09V3a2 2 0 0 1 4 0v.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.18.59.62 1.04 1.21 1.21l.09.02A2 2 0 0 1 21 14h-.09a1.65 1.65 0 0 0-1.51 1Z"/></symbol>
+  <symbol id="ic-key" viewBox="0 0 24 24"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></symbol>
+  <symbol id="ic-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 12v5"/><path d="M11 8v9"/><path d="M15 5v12"/><path d="M19 11v6"/></symbol>
+  <symbol id="ic-brain" viewBox="0 0 24 24"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/></symbol>
+  <symbol id="ic-doc" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></symbol>
+  <symbol id="ic-sparkles" viewBox="0 0 24 24"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></symbol>
+  <symbol id="ic-mail" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></symbol>
+  <symbol id="ic-briefcase" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></symbol>
+  <symbol id="ic-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="ic-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+  <symbol id="ic-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></symbol>
+  <symbol id="ic-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+  <symbol id="ic-bolt" viewBox="0 0 24 24"><path d="M13 2 3 14h7l-1 8 10-12h-7l1-8Z"/></symbol>
+  <symbol id="ic-rocket" viewBox="0 0 24 24"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09Z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2Z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></symbol>
+  <symbol id="ic-cloud" viewBox="0 0 24 24"><path d="M17.5 19a4.5 4.5 0 1 0 0-9 6 6 0 0 0-11.7 2.3A4 4 0 0 0 6 20Z"/></symbol>
+  <symbol id="ic-cpu" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/></symbol>
+  <symbol id="ic-paint" viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="12.5" r="2.5"/><path d="M12 2a10 10 0 1 0 0 20 1.5 1.5 0 0 0 1.06-2.56 1.5 1.5 0 0 1 1.06-2.56h1.88a4 4 0 0 0 4-4 10 10 0 0 0-8-10Z"/></symbol>
+  <symbol id="ic-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></symbol>
+  <symbol id="ic-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+  <symbol id="ic-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="3.5" cy="6" r="1"/><circle cx="3.5" cy="12" r="1"/><circle cx="3.5" cy="18" r="1"/></symbol>
+  <symbol id="ic-edit-pencil" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4Z"/></symbol>
+  <symbol id="ic-arrow-up" viewBox="0 0 24 24"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></symbol>
+  <symbol id="ic-refresh" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15.6-6L21 8.5"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.6 6L3 15.5"/><path d="M3 21v-5h5"/></symbol>
+  <symbol id="ic-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></symbol>
+  <symbol id="ic-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></symbol>
+  <symbol id="ic-monitor" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></symbol>
+  <symbol id="ic-eye" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="ic-eye-off" viewBox="0 0 24 24"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><path d="M2 2l20 20"/></symbol>
+  <symbol id="ic-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></symbol>
+  <symbol id="ic-zap" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/></symbol>
+  <symbol id="ic-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
+  <symbol id="ic-star" viewBox="0 0 24 24"><path d="m12 2 3.09 6.26 6.91 1-5 4.87 1.18 6.88L12 17.77l-6.18 3.24L7 14.13 2 9.26l6.91-1L12 2Z"/></symbol>
+  <symbol id="ic-star-fill" viewBox="0 0 24 24"><path d="m12 2 3.09 6.26 6.91 1-5 4.87 1.18 6.88L12 17.77l-6.18 3.24L7 14.13 2 9.26l6.91-1L12 2Z" fill="currentColor"/></symbol>
+  <symbol id="ic-message" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></symbol>
+  <symbol id="ic-bookmark" viewBox="0 0 24 24"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2Z"/></symbol>
+  <symbol id="ic-phone" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92Z"/></symbol>
+  <symbol id="ic-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="ic-trophy" viewBox="0 0 24 24"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></symbol>
+  <symbol id="ic-x-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></symbol>
+  <symbol id="ic-ban" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/></symbol>
+  <symbol id="ic-file-text" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></symbol>
+  <symbol id="ic-circle-empty" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/></symbol>
+</svg>
+
+<!-- Mobile sidebar backdrop -->
+<div id="sb-overlay" onclick="closeMobileSidebar()"></div>
+
+<!-- Sidebar -->
+<div id="sb">
+  <div class="sb-head">
+    <div class="logo">
+      <img src="/assets/icons/logo.svg" alt="StackResume" class="logo-mark-img">
+      <div class="logo-text"><div class="logo-name">Stack<span>Resume</span></div><div class="logo-sub">AI Resume Builder</div></div>
+      <button class="sb-collapse" onclick="toggleSidebar()" title="Collapse sidebar">
+        <svg class="ic sm"><use href="#ic-x"/></svg>
+      </button>
+    </div>
+    <button id="new-btn" onclick="newChat()">
+      <svg class="ic sm"><use href="#ic-plus"/></svg>
+      <span class="sb-label">New Resume</span>
+    </button>
+    <div class="sb-search">
+      <svg class="ic sm sb-search-ic"><use href="#ic-search"/></svg>
+      <input type="text" id="sb-search" placeholder="Search chats…" oninput="filterSessions()">
+      <button id="sb-search-clear" class="sb-search-x" onclick="clearSearch()" style="display:none">
+        <svg class="ic sm"><use href="#ic-x"/></svg>
+      </button>
+    </div>
+  </div>
+  <button id="sb-expand" class="sb-expand" onclick="toggleSidebar()" title="Expand sidebar" style="display:none">
+    <svg class="ic sm"><use href="#ic-list"/></svg>
+  </button>
+  <div class="ss">
+    <div class="sl" id="sl-fav" style="display:none">Favorites</div>
+    <div id="sessions-list-fav"></div>
+    <div class="sl" id="sl-history">History</div>
+    <div id="sessions-list"></div>
+    <div id="sessions-empty" style="font-size:12px;color:var(--text3);padding:8px;display:none">No matches</div>
+    <div id="sess-load-more" style="display:none"><button class="load-more-btn" onclick="loadSessions(true)">Load more</button></div>
+  </div>
+
+  <div class="sb-foot">
+    <button class="sb-btn mem-btn" onclick="openMemory()"><svg class="ic"><use href="#ic-brain"/></svg> My Profile (Memory)</button>
+    <button class="sb-btn" id="master-sb-btn" onclick="openMasterModal()"><svg class="ic"><use href="#ic-star"/></svg> Master Resume <span id="master-sb-badge" style="display:none;font-size:9px;background:rgba(245,158,11,.2);color:var(--amber);border-radius:8px;padding:1px 5px;margin-left:2px;font-weight:700">SAVED</span></button>
+    <button class="sb-btn" onclick="openSettingsModal()"><svg class="ic"><use href="#ic-settings"/></svg> Settings</button>
+    <div class="theme-toggle" role="group" aria-label="Theme">
+      <button data-th="system" onclick="setTheme('system')" title="Match system theme"><svg class="ic"><use href="#ic-monitor"/></svg>System</button>
+      <button data-th="light" onclick="setTheme('light')" title="Light theme"><svg class="ic"><use href="#ic-sun"/></svg>Light</button>
+      <button data-th="dark" onclick="setTheme('dark')" title="Dark theme"><svg class="ic"><use href="#ic-moon"/></svg>Dark</button>
+    </div>
+    <button id="logout-btn" class="sb-btn" onclick="doLogout()" style="display:none;border-color:rgba(248,113,113,.3);color:var(--red)"><svg class="ic"><use href="#ic-shield"/></svg> Sign out<span id="logout-user" style="font-size:11px;opacity:0.65;margin-left:6px"></span></button>
+  </div>
+</div>
+
+<!-- Main -->
+<div id="main">
+  <div id="tb">
+    <button class="mob-menu-btn" onclick="openMobileSidebar()" title="Open menu">
+      <svg class="ic"><use href="#ic-list"/></svg>
+    </button>
+    <div class="tb-title" id="tb-title">StackResume</div>
+    <div class="tb-status" id="tb-status"><div class="phdr-dot"></div><span id="tb-status-txt">Generating…</span></div>
+    <div class="prov-pill" onclick="openSettings()" title="Click to change model"><div class="pdot"></div><span id="prov-lbl">openai / gpt-4o</span></div>
+  </div>
+  <div id="chat">
+    <div id="welcome">
+      <img src="/assets/icons/logo.svg" alt="" class="wc-ic">
+      <div class="wc-title">Your AI Resume Builder</div>
+      <div class="wc-sub">Tell us about your role and experience. A multi-agent pipeline crafts a recruiter-grade, ATS-optimised software developer resume — with quantified bullets, JD-tailored keywords, and modern PDF export.</div>
+      <div class="wc-features">
+        <div class="wc-feat"><svg class="ic"><use href="#ic-zap"/></svg> Multi-agent pipeline</div>
+        <div class="wc-feat"><svg class="ic"><use href="#ic-target"/></svg> JD tailoring</div>
+        <div class="wc-feat"><svg class="ic"><use href="#ic-chart"/></svg> ATS scoring</div>
+        <div class="wc-feat"><svg class="ic"><use href="#ic-doc"/></svg> PDF templates</div>
+        <div class="wc-feat"><svg class="ic"><use href="#ic-brain"/></svg> Persistent memory</div>
+      </div>
+      <div class="ex-grid">
+        <div class="ex-card" onclick="useEx(this)">
+          <div class="ex-card-ic"><svg class="ic"><use href="#ic-bolt"/></svg></div>
+          <div class="ex-card-body">
+            <div class="ex-lbl">Quick start</div>
+            <div class="ex-txt">Spring Boot developer, 6 years experience, worked at a fintech startup</div>
+          </div>
+        </div>
+        <div class="ex-card" onclick="useEx(this)">
+          <div class="ex-card-ic"><svg class="ic"><use href="#ic-cpu"/></svg></div>
+          <div class="ex-card-body">
+            <div class="ex-lbl">AI / ML</div>
+            <div class="ex-txt">Senior AI/ML engineer, Python, PyTorch, LLM fine-tuning, 8 years</div>
+          </div>
+        </div>
+        <div class="ex-card" onclick="useEx(this)">
+          <div class="ex-card-ic"><svg class="ic"><use href="#ic-paint"/></svg></div>
+          <div class="ex-card-body">
+            <div class="ex-lbl">Frontend</div>
+            <div class="ex-txt">React frontend dev, 4 years, TypeScript + Next.js, open source contributor</div>
+          </div>
+        </div>
+        <div class="ex-card" onclick="useEx(this)">
+          <div class="ex-card-ic"><svg class="ic"><use href="#ic-cloud"/></svg></div>
+          <div class="ex-card-body">
+            <div class="ex-lbl">DevOps</div>
+            <div class="ex-txt">Cloud engineer, AWS certified, Kubernetes, Terraform, Goldman Sachs 2020–2024</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="messages"></div>
+  </div>
+
+  <div id="ia">
+    <div class="ia-inner">
+      <div class="jd-strip" id="jd-strip">
+        <div class="jd-strip-label">
+          <svg class="ic"><use href="#ic-target"/></svg>
+          Job Description (tailoring mode)
+          <button onclick="closeJD()" title="Close"><svg class="ic sm"><use href="#ic-x"/></svg></button>
+        </div>
+        <textarea id="jd-textarea" placeholder="Paste the job description here — StackResume will tailor your resume to match the exact keywords, requirements, and skills…"></textarea>
+        <div class="jd-intensity-row" title="How aggressively to tailor the resume to this job description">
+          <label for="jd-intensity"><svg class="ic sm"><use href="#ic-target"/></svg> Tailoring</label>
+          <input type="range" id="jd-intensity" min="0" max="100" step="5" value="100" oninput="updateJdIntensityUI()">
+          <span id="jd-intensity-value">100%</span>
+          <span class="jd-intensity-hint" id="jd-intensity-hint">Full rewrite to match the JD</span>
+        </div>
+      </div>
+      <div class="att-chip" id="att-chip" style="display:none">
+        <span class="att-ic" id="att-ic"><svg class="ic"><use href="#ic-attach"/></svg></span>
+        <span class="att-label" id="att-label">Resume attached</span>
+        <span class="att-meta" id="att-meta"></span>
+        <button class="att-x" onclick="clearAttachment()" title="Remove"><svg class="ic sm"><use href="#ic-x"/></svg></button>
+      </div>
+      <input type="file" id="file-input" accept=".pdf,.json,.txt,.docx" style="display:none" onchange="handleFile(event)">
+      <div class="iw">
+        <textarea id="mi" placeholder="Describe your role, experience, companies… or paste a quick blurb like 'Senior Backend Engineer, 7 years, Python, AWS'" rows="1"></textarea>
+        <div class="ibar">
+          <div class="hints" onwheel="if(Math.abs(event.deltaY)>Math.abs(event.deltaX)){event.preventDefault();this.scrollLeft+=event.deltaY;}">
+            <button class="hint accent-pill" onclick="document.getElementById('file-input').click()" title="Attach a PDF or JSON resume to tweak"><svg class="ic sm"><use href="#ic-attach"/></svg> Attach resume</button>
+            <span style="position:relative;display:inline-block" id="master-attach-wrap">
+              <button class="hint master-toggle" id="master-attach-btn" onclick="toggleMasterAttachMenu(event)" style="display:none" title="Use a saved master resume as a starting point"><svg class="ic sm"><use href="#ic-star"/></svg> Use Master</button>
+            </span>
+            <button class="hint accent-pill jd-toggle" id="jd-toggle" onclick="toggleJD()"><svg class="ic sm"><use href="#ic-target"/></svg> Tailor to JD</button>
+            <button class="hint mem-toggle on" id="mem-toggle" onclick="toggleMemPill()" title="Apply your saved profile memory to this turn"><svg class="ic sm"><use href="#ic-brain"/></svg> Use memory</button>
+            <button class="hint" onclick="appendHint('Improve the professional summary to be more impactful')"><svg class="ic sm"><use href="#ic-edit-pencil"/></svg> Better summary</button>
+            <button class="hint" onclick="appendHint('Add quantified impact metrics throughout all experience sections')"><svg class="ic sm"><use href="#ic-chart"/></svg> Add metrics</button>
+            <button class="hint" onclick="appendHint('Raise the seniority level to Staff/Principal Engineer')"><svg class="ic sm"><use href="#ic-arrow-up"/></svg> Senior level</button>
+            <button class="hint" onclick="appendHint('Target FAANG companies (Google, Meta, Amazon, Apple, Netflix)')"><svg class="ic sm"><use href="#ic-rocket"/></svg> Target FAANG</button>
+          </div>
+          <button id="sb-btn" onclick="sendMsg()" title="Send (Enter)">
+            <svg class="ic"><use href="#ic-send"/></svg>
+          </button>
+          <button id="stop-btn" onclick="stopGen()" title="Stop generation">
+            <svg class="ic"><use href="#ic-stop"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Consolidated Settings Modal (Sections / AI Model / API Keys / Usage Metrics / Data Management) -->
+<div class="ov" id="settings-modal">
+  <div class="modal" style="width:min(1000px,96vw);max-height:92vh;display:flex;flex-direction:column">
+    <button class="mx" onclick="closeSettingsModal()">×</button>
+    <div class="modal-title"><svg class="ic" style="margin-right:6px"><use href="#ic-settings"/></svg>Settings</div>
+
+    <div class="set-tabs settings-tabs">
+      <button class="set-tab on" data-pane="set-pane-sections" onclick="onSettingsTabClick(this)"><svg class="ic sm"><use href="#ic-list"/></svg> Sections</button>
+      <button class="set-tab" data-pane="set-pane-ai" onclick="onSettingsTabClick(this)"><svg class="ic sm"><use href="#ic-cpu"/></svg> AI Model</button>
+      <button class="set-tab" data-pane="set-pane-keys" onclick="onSettingsTabClick(this)"><svg class="ic sm"><use href="#ic-key"/></svg> API Keys</button>
+      <button class="set-tab" data-pane="set-pane-metrics" onclick="onSettingsTabClick(this)"><svg class="ic sm"><use href="#ic-chart"/></svg> Usage Metrics</button>
+      <button class="set-tab" data-pane="set-pane-data" onclick="onSettingsTabClick(this)"><svg class="ic sm"><use href="#ic-trash"/></svg> Data Management</button>
+    </div>
+
+    <div class="settings-body" style="overflow-y:auto;flex:1;min-height:0;padding-right:4px">
+
+      <!-- ── Sections pane ── -->
+      <div class="set-pane on" id="set-pane-sections">
+        <div class="fhint" style="margin-bottom:14px">
+          Disabled sections are skipped during generation and excluded from PDF/Word/JSON exports. Field toggles strip individual keys (e.g. GPA, employment type) while keeping the parent section.
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+          <button class="bsec" style="padding:5px 10px;font-size:12px" onclick="secPrefsBulk(true)">Enable all</button>
+          <button class="bsec" style="padding:5px 10px;font-size:12px" onclick="secPrefsBulk(false)">Disable all optional</button>
+          <button class="bsec" style="padding:5px 10px;font-size:12px" onclick="secPrefsReset()">Reset to defaults</button>
+        </div>
+        <div id="sec-prefs-list" style="display:flex;flex-direction:column;gap:8px">
+          <div class="pv-empty" style="padding:20px 0">Loading…</div>
+        </div>
+        <div class="ma">
+          <button class="bsec" onclick="closeSettingsModal()">Cancel</button>
+          <button class="bpri" onclick="saveSectionPrefs()">Save Sections</button>
+        </div>
+      </div>
+
+      <!-- ── AI Model pane ── -->
+      <div class="set-pane" id="set-pane-ai">
+        <div class="fg"><label class="fl">Provider</label>
+          <select class="fs" id="prov-sel" onchange="updModels()">
+            <option value="openai">OpenAI</option>
+            <option value="anthropic">Anthropic Claude</option>
+            <option value="google">Google Gemini</option>
+            <option value="ollama">Ollama (Local / Self-hosted)</option>
+            <option value="custom">Custom / Other OpenAI-compatible</option>
+          </select>
+        </div>
+        <div id="sec-openai" class="prov-sec">
+          <div class="fg"><label class="fl">Model</label>
+            <input type="text" class="fi" id="custom-openai" placeholder="e.g. gpt-4o, gpt-4o-mini, o3-mini, ft:gpt-4o:…">
+          </div>
+          <div class="fhint" style="margin-top:-8px">Requires an OpenAI API key — set it in <strong>🔑 API Keys</strong>.</div>
+        </div>
+        <div id="sec-anthropic" class="prov-sec" style="display:none">
+          <div class="fg"><label class="fl">Model</label>
+            <input type="text" class="fi" id="custom-anthropic" placeholder="e.g. claude-sonnet-4-6, claude-opus-4-7, claude-haiku-4-5-20251001">
+          </div>
+          <div class="fhint" style="margin-top:-8px">Requires an Anthropic API key — set it in <strong>🔑 API Keys</strong>.</div>
+        </div>
+        <div id="sec-google" class="prov-sec" style="display:none">
+          <div class="fg"><label class="fl">Model</label>
+            <input type="text" class="fi" id="custom-google" placeholder="e.g. gemini-2.0-flash, gemini-2.5-pro-preview-05-06, gemini-2.5-flash-preview-04-17">
+          </div>
+          <div class="fhint" style="margin-top:-8px">Requires a Google API key — set it in <strong>🔑 API Keys</strong>.</div>
+        </div>
+        <div id="sec-ollama" class="prov-sec" style="display:none">
+          <div class="fg"><label class="fl">Model</label>
+            <input type="text" class="fi" id="custom-ollama" placeholder="e.g. llama3.1, mistral, deepseek-r1, llama3.1:70b">
+          </div>
+          <div class="fg"><label class="fl">Ollama base URL</label>
+            <input type="text" class="fi" id="model-ollama-url" placeholder="http://localhost:11434">
+            <div class="fhint">Use <code style="font-size:11px;background:var(--bg3);padding:1px 4px;border-radius:3px">http://host.docker.internal:11434</code> when StackResume runs in Docker and Ollama runs on the host.</div>
+          </div>
+        </div>
+        <div id="sec-custom" class="prov-sec" style="display:none">
+          <div class="fg"><label class="fl">Model name <span style="color:var(--text3)">(required)</span></label>
+            <input type="text" class="fi" id="custom-custom" placeholder="e.g. gpt-4o, llama-3.1-70b-versatile, mistral-large-latest">
+          </div>
+          <div class="fg"><label class="fl">Base URL <span style="color:var(--text3)">(required)</span></label>
+            <input type="text" class="fi" id="model-custom-url" placeholder="e.g. https://openrouter.ai/api/v1, http://localhost:8000/v1">
+            <div class="fhint">Any OpenAI-compatible endpoint. Set the API key in the <strong>🔑 API Keys</strong> tab (OpenAI key field).</div>
+          </div>
+        </div>
+
+        <div style="border-top:1px solid var(--bdr);margin:8px 0 14px"></div>
+        <div class="set-section-title" style="margin-bottom:8px">Send test prompt</div>
+        <div class="fhint" style="margin-bottom:8px">Verify the selected provider + model responds. Uses API keys saved in the <strong>🔑 API Keys</strong> tab.</div>
+        <div class="fg">
+          <textarea class="fta" id="llm-test-prompt" placeholder="Reply with one short sentence." oninput="rememberTestPrompt()" style="min-height:54px"></textarea>
+        </div>
+        <div class="fg" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button class="bsec" type="button" onclick="testLlmPrompt()" style="padding:8px 14px;display:inline-flex;align-items:center;gap:6px">
+            <svg class="ic"><use href="#ic-zap"/></svg>
+            Send test prompt
+          </button>
+          <span id="llm-test-status" class="fhint" style="margin:0"></span>
+        </div>
+        <div id="llm-test-response" style="display:none;margin-top:6px;padding:10px 12px;border:1px solid var(--bdr);border-radius:6px;background:var(--bg2);font-size:12.5px;color:var(--text);white-space:pre-wrap;max-height:200px;overflow-y:auto"></div>
+        <div class="ma"><button class="bsec" onclick="closeSettingsModal()">Cancel</button><button class="bpri" onclick="saveCfg()">Save AI Model</button></div>
+      </div>
+
+      <!-- ── API Keys pane ── -->
+      <div class="set-pane" id="set-pane-keys">
+        <div class="fhint" style="margin-bottom:14px">Stored in DB · overrides .env</div>
+        <div class="set-tabs" style="margin-bottom:14px">
+          <button class="set-tab on" data-pane="k-providers" onclick="swSetTab('keys',this)">Provider Keys</button>
+          <button class="set-tab" data-pane="k-langsmith" onclick="swSetTab('keys',this)">LangSmith</button>
+          <button class="set-tab" data-pane="k-pipeline" onclick="swSetTab('keys',this)">Pipeline</button>
+        </div>
+
+        <div class="set-pane on" id="k-providers">
+          <div class="set-section-title">OpenAI <span class="key-status unset" id="ks-openai">not set</span></div>
+          <div class="fg">
+            <input type="password" class="fi" id="k-openai" placeholder="sk-… (leave empty to keep current value)" autocomplete="new-password">
+            <div class="fhint">Required for any GPT-4o / o1 / o3 model.</div>
+          </div>
+          <div class="set-section-title">Anthropic <span class="key-status unset" id="ks-anthropic">not set</span></div>
+          <div class="fg">
+            <input type="password" class="fi" id="k-anthropic" placeholder="sk-ant-… (leave empty to keep current value)" autocomplete="new-password">
+            <div class="fhint">Required for any Claude model.</div>
+          </div>
+          <div class="set-section-title">Google Gemini <span class="key-status unset" id="ks-google">not set</span></div>
+          <div class="fg">
+            <input type="password" class="fi" id="k-google" placeholder="AIza… (leave empty to keep current value)" autocomplete="new-password">
+            <div class="fhint">Required for any Gemini model.</div>
+          </div>
+        </div>
+
+        <div class="set-pane" id="k-langsmith">
+          <div class="set-section-title">LangSmith Tracing <span class="key-status unset" id="ks-langsmith">not set</span></div>
+          <div class="toggle-row">
+            <div class="toggle-sw" id="k-ls-toggle" onclick="toggleSw(this)"></div>
+            <div>
+              <div style="font-size:13.5px;color:var(--text);font-weight:500">Enable LangSmith tracing</div>
+              <div style="font-size:11.5px;color:var(--text3)">Send every LLM call to LangSmith for observability and debugging.</div>
+            </div>
+          </div>
+          <div class="fg"><label class="fl">LangSmith API key</label>
+            <input type="password" class="fi" id="k-ls-key" placeholder="lsv2_pt_… (leave empty to keep current value)" autocomplete="new-password">
+            <div class="fhint">Get one at <a href="https://smith.langchain.com" target="_blank" rel="noopener" style="color:var(--accent2)">smith.langchain.com</a> → Settings → API Keys.</div>
+          </div>
+          <div class="fg"><label class="fl">Project name</label>
+            <input type="text" class="fi" id="k-ls-project" placeholder="stackresume">
+            <div class="fhint">All runs land in this LangSmith project.</div>
+          </div>
+          <div class="fg" style="display:flex;gap:8px;align-items:center">
+            <button class="bsec" type="button" onclick="testLangsmith()" style="padding:8px 14px;display:inline-flex;align-items:center;gap:6px">
+              <svg class="ic"><use href="#ic-zap"/></svg>
+              Send test trace
+            </button>
+            <span id="ls-test-status" class="fhint" style="margin:0"></span>
+          </div>
+        </div>
+
+        <div class="set-pane" id="k-pipeline">
+          <div class="frow">
+            <div class="fg"><label class="fl">Max review iterations</label>
+              <input type="number" class="fi" id="k-iters" min="1" max="6" placeholder="3">
+              <div class="fhint">How many Reviewer→Enhancer loops at most.</div>
+            </div>
+            <div class="fg"><label class="fl">Min quality score (stop)</label>
+              <input type="number" class="fi" id="k-minscore" min="0" max="100" step="0.5" placeholder="82">
+              <div class="fhint">Stop refining once the resume hits this score.</div>
+            </div>
+          </div>
+          <div class="fg"><label class="fl">Temperature</label>
+            <input type="number" class="fi" id="k-temp" min="0" max="2" step="0.05" placeholder="0.7">
+            <div class="fhint">0 = deterministic, 1 = balanced, 2 = creative.</div>
+          </div>
+        </div>
+
+        <div class="ma">
+          <button class="bdanger" onclick="resetKeys()">Reset to .env</button>
+          <button class="bsec" onclick="closeSettingsModal()">Cancel</button>
+          <button class="bpri" onclick="saveKeys()">Save</button>
+        </div>
+      </div>
+
+      <!-- ── Usage Metrics pane ── -->
+      <div class="set-pane" id="set-pane-metrics">
+        <div class="fhint" style="margin-bottom:14px"><span id="met-refresh-meta">live</span></div>
+        <div id="metrics-body"><div class="pv-empty">Loading…</div></div>
+        <div class="ma">
+          <button class="bsec" onclick="loadMetrics()">↻ Refresh</button>
+          <button class="bpri" onclick="closeSettingsModal()">Close</button>
+        </div>
+      </div>
+
+      <!-- ── Data Management pane ── -->
+      <div class="set-pane" id="set-pane-data">
+        <div style="margin-bottom:24px">
+          <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">Master Resumes</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--bdr)">
+            <div>
+              <div style="font-size:13px;color:var(--text1);font-weight:500" id="dm-master-title">No master resumes saved</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:2px">Manage them via ⭐ Master Resume in the sidebar</div>
+            </div>
+            <button class="bsec" id="dm-master-open" onclick="closeSettingsModal();openMasterModal()">Manage</button>
+          </div>
+        </div>
+
+        <div style="margin-bottom:24px">
+          <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">Chat History</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--bdr)">
+            <div>
+              <div style="font-size:13px;color:var(--text1);font-weight:500">Delete non-favorite chats</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:2px">Starred sessions are kept</div>
+            </div>
+            <button class="bdanger" onclick="deleteNonFavChats()">Delete</button>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0">
+            <div>
+              <div style="font-size:13px;color:var(--text1);font-weight:500">Delete all chats</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:2px">Permanently removes every session and message</div>
+            </div>
+            <button class="bdanger" onclick="deleteAllChats()">Delete all</button>
+          </div>
+        </div>
+
+        <div style="margin-bottom:24px">
+          <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">Usage Metrics</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0">
+            <div>
+              <div style="font-size:13px;color:var(--text1);font-weight:500">Reset metrics data</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:2px">Clears token counts, scores, and agent traces</div>
+            </div>
+            <button class="bdanger" onclick="resetMetrics()">Reset</button>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">Profile Memory</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0">
+            <div>
+              <div style="font-size:13px;color:var(--text1);font-weight:500">Clear profile memory</div>
+              <div style="font-size:11px;color:var(--text3);margin-top:2px">Removes all saved personal and career info</div>
+            </div>
+            <button class="bdanger" onclick="clearMemoryFromDataMgmt()">Clear</button>
+          </div>
+        </div>
+
+        <div class="ma" style="margin-top:8px"><button class="bsec" onclick="closeSettingsModal()">Close</button></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Memory Modal -->
+<div class="ov" id="mem-modal">
+  <div class="modal" style="width:600px">
+    <button class="mx" onclick="closeMem()">×</button>
+    <div class="modal-title">
+      <svg class="ic lg"><use href="#ic-brain"/></svg>
+      My Profile Memory
+      <span style="font-size:12px;color:var(--text3);font-weight:400;margin-left:4px">Persists across all sessions</span>
+    </div>
+
+    <!-- Tabs -->
+    <div class="set-tabs">
+      <button class="set-tab on" data-pane="mem-identity" onclick="swSetTab('mem',this)">Identity</button>
+      <button class="set-tab" data-pane="mem-experience" onclick="swSetTab('mem',this)">Experience</button>
+      <button class="set-tab" data-pane="mem-projects" onclick="swSetTab('mem',this)">Projects</button>
+      <button class="set-tab" data-pane="mem-education" onclick="swSetTab('mem',this)">Education</button>
+      <button class="set-tab" data-pane="mem-skillstab" onclick="swSetTab('mem',this)">Skills &amp; Goals</button>
+      <button class="set-tab" data-pane="mem-extras" onclick="swSetTab('mem',this)">More</button>
+    </div>
+
+    <!-- ── Identity ── -->
+    <div class="set-pane on" id="mem-identity">
+      <div class="frow">
+        <div class="fg"><label class="fl">Full Name</label><input type="text" class="fi" id="m-name" placeholder="Jane Doe"></div>
+        <div class="fg"><label class="fl">Email</label><input type="text" class="fi" id="m-email" placeholder="jane@example.com"></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Phone</label><input type="text" class="fi" id="m-phone" placeholder="+1 555-000-0000"></div>
+        <div class="fg"><label class="fl">Location</label><input type="text" class="fi" id="m-loc" placeholder="San Francisco, CA"></div>
+      </div>
+      <div class="fg"><label class="fl">Professional Bio / Summary</label>
+        <textarea class="fta" id="m-summary" placeholder="Brief bio injected into every resume for context…" style="min-height:64px"></textarea>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="fl">LinkedIn</label><input type="text" class="fi" id="m-li" placeholder="linkedin.com/in/janedoe"></div>
+        <div class="fg"><label class="fl">GitHub</label><input type="text" class="fi" id="m-gh" placeholder="github.com/janedoe"></div>
+      </div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Website</label><input type="text" class="fi" id="m-web" placeholder="janedoe.dev"></div>
+        <div class="fg"><label class="fl">Portfolio URL</label><input type="text" class="fi" id="m-portfolio" placeholder="portfolio.janedoe.dev"></div>
+      </div>
+    </div>
+
+    <!-- ── Experience ── -->
+    <div class="set-pane" id="mem-experience">
+      <div class="fhint" style="margin-bottom:10px">Each company is saved with full date, location &amp; type detail.</div>
+      <div id="m-companies-rows"></div>
+      <button class="mem-add-btn" onclick="addCompanyRow()">+ Add Company</button>
+    </div>
+
+    <!-- ── Projects ── -->
+    <div class="set-pane" id="mem-projects">
+      <div class="fhint" style="margin-bottom:10px">Side projects, open-source work, or notable contributions to include in resumes.</div>
+      <div id="m-projects-rows"></div>
+      <button class="mem-add-btn" onclick="addProjectRow()">+ Add Project</button>
+    </div>
+
+    <!-- ── Education ── -->
+    <div class="set-pane" id="mem-education">
+      <div id="m-edu-rows"></div>
+      <button class="mem-add-btn" onclick="addEduRow()">+ Add Education</button>
+      <div class="set-section-title" style="margin-top:18px">Certifications</div>
+      <div id="m-cert-rows"></div>
+      <button class="mem-add-btn" onclick="addCertRow()">+ Add Certification</button>
+    </div>
+
+    <!-- ── Skills & Goals ── -->
+    <div class="set-pane" id="mem-skillstab">
+      <div class="frow">
+        <div class="fg"><label class="fl">Total Years Experience</label><input type="number" class="fi" id="m-yrs" placeholder="7" min="0" max="60"></div>
+        <div class="fg"><label class="fl">Work Authorization</label><input type="text" class="fi" id="m-workauth" placeholder="US Citizen, H-1B, Open to sponsor…"></div>
+      </div>
+      <div class="fg"><label class="fl">Target Roles <span style="color:var(--text3)">(comma-separated)</span></label>
+        <input type="text" class="fi" id="m-roles" placeholder="Senior Backend Engineer, Staff SWE, Principal Engineer"></div>
+      <div class="fg"><label class="fl">Skills to Always Include <span style="color:var(--text3)">(comma-separated)</span></label>
+        <input type="text" class="fi" id="m-skills" placeholder="Python, AWS, Docker, PostgreSQL, System Design"></div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Availability</label><input type="text" class="fi" id="m-availability" placeholder="Immediately, 2 weeks notice…"></div>
+        <div class="fg" style="display:flex;align-items:center;padding-top:22px">
+          <label class="mem-present-label" style="font-size:13px">
+            <input type="checkbox" id="m-remote"> Open to Remote
+          </label>
+        </div>
+      </div>
+      <div class="set-section-title" style="margin-top:14px">Spoken Languages</div>
+      <div id="m-lang-rows"></div>
+      <button class="mem-add-btn" onclick="addLangRow()">+ Add Language</button>
+    </div>
+
+    <!-- ── More ── -->
+    <div class="set-pane" id="mem-extras">
+      <div class="fg"><label class="fl">Personal Notes <span style="color:var(--text3)">(anything else to keep in context)</span></label>
+        <textarea class="fta" id="m-notes" style="min-height:100px" placeholder="Prefer not to include salary history. Open to relocation. Interested in AI/ML teams."></textarea>
+      </div>
+      <div class="fhint">These notes are always injected into the AI context when generating resumes.</div>
+    </div>
+
+    <div class="ma">
+      <button class="bdanger" onclick="clearMemory()">Clear All</button>
+      <input type="file" id="mem-import-input" accept=".json,application/json" style="display:none" onchange="handleProfileImport(event)">
+      <button class="bsec" onclick="importProfile()"><svg class="ic" style="width:13px;height:13px"><use href="#ic-arrow-up"/></svg> Import</button>
+      <button class="bsec" onclick="exportProfile()"><svg class="ic" style="width:13px;height:13px"><use href="#ic-download"/></svg> Export</button>
+      <button class="bsec" onclick="closeMem()">Cancel</button>
+      <button class="bpri" onclick="saveMem()">Save Memory</button>
+    </div>
+  </div>
+</div>
+
+<!-- Export Modal — resume + cover letter, all formats -->
+<div class="ov" id="pdf-modal">
+  <div class="modal" style="width:1000px;max-width:96vw">
+    <button class="mx" onclick="closePdf()">×</button>
+    <div class="modal-title" id="export-title">📄 Export Resume</div>
+    <div class="exp-body">
+      <div class="exp-col">
+        <div class="fg">
+          <div class="fl">Format</div>
+          <div class="opt-row">
+            <button class="opt-btn sel" data-fmt="pdf" onclick="selOpt('fmt',this)">PDF</button>
+            <button class="opt-btn" data-fmt="docx" onclick="selOpt('fmt',this)">Word (.docx)</button>
+            <button class="opt-btn" data-fmt="odt" onclick="selOpt('fmt',this)">OpenDocument (.odt)</button>
+          </div>
+          <div class="fhint" id="fmt-hint" style="margin-top:6px">PDF — universal, print-ready, recommended for online job portals.</div>
+        </div>
+        <div class="fg">
+          <div class="fl">Template</div>
+          <div class="tmpl-grid">
+            <div class="tmpl-card sel" data-tmpl="classic_ats" onclick="selTmpl(this)">
+              <div class="tmpl-icon">📋</div><div class="tmpl-name">Classic</div>
+              <div class="tmpl-desc">ATS-safe B&amp;W</div>
+            </div>
+            <div class="tmpl-card" data-tmpl="modern_clean" onclick="selTmpl(this)">
+              <div class="tmpl-icon">✨</div><div class="tmpl-name">Modern</div>
+              <div class="tmpl-desc">Indigo accents</div>
+            </div>
+            <div class="tmpl-card" data-tmpl="executive_dark" onclick="selTmpl(this)">
+              <div class="tmpl-icon">💼</div><div class="tmpl-name">Executive</div>
+              <div class="tmpl-desc">Slate, senior</div>
+            </div>
+            <div class="tmpl-card" data-tmpl="dark_theme" onclick="selTmpl(this)">
+              <div class="tmpl-icon">🌙</div><div class="tmpl-name">Dark Theme</div>
+              <div class="tmpl-desc">Navy bg, light text</div>
+            </div>
+          </div>
+        </div>
+        <div class="fg"><div class="fl">Font Size</div>
+          <div class="opt-row">
+            <button class="opt-btn" data-fs="small" onclick="selOpt('fs',this)">9.5pt</button>
+            <button class="opt-btn sel" data-fs="normal" onclick="selOpt('fs',this)">10.5pt</button>
+            <button class="opt-btn" data-fs="large" onclick="selOpt('fs',this)">11.5pt</button>
+          </div>
+          <div class="fs-slider-row" title="Fine-tune the font size — useful when a section or bullet breaks mid-page. Drag the slider, click ↑/↓, or type a value.">
+            <input type="range" id="fs-slider" class="fs-slider" min="80" max="130" step="1" value="105" oninput="onFsSlider(this)">
+            <input type="number" id="fs-num" class="fs-num" min="8" max="13" step="0.1" value="10.5" oninput="onFsNum(this)" onchange="onFsNum(this)">
+            <span class="fs-unit">pt</span>
+          </div>
+        </div>
+        <div class="fg" id="pages-fg"><div class="fl">Pages <span style="font-size:11px;color:var(--text3);font-weight:400">(PDF only)</span></div>
+          <div class="opt-row">
+            <button class="opt-btn sel" data-mp="auto" onclick="selOpt('mp',this)">Auto</button>
+            <button class="opt-btn" data-mp="1" onclick="selOpt('mp',this)">1</button>
+            <button class="opt-btn" data-mp="2" onclick="selOpt('mp',this)">2</button>
+          </div>
+        </div>
+      </div>
+      <div class="exp-col">
+        <div class="fl">Live Preview <span style="font-size:11px;color:var(--text3);font-weight:400">(updates as you change template)</span></div>
+        <div class="exp-prev-wrap" id="exp-prev-wrap">
+          <div class="exp-prev-hd">
+            <div class="pv-name-label" id="exp-prev-label">Preview</div>
+            <div class="pv-actions">
+              <button class="bsec" style="padding:3px 8px;font-size:11px" onclick="refreshExportPreview()" title="Refresh preview">↻</button>
+            </div>
+          </div>
+          <div class="exp-prev-empty" id="exp-prev-empty">Building preview…</div>
+          <iframe class="exp-prev-frame" id="exp-prev-frame" style="display:none" title="PDF preview"></iframe>
+        </div>
+      </div>
+    </div>
+    <div class="ma">
+      <button class="bsec" onclick="closePdf()">Cancel</button>
+      <button class="bpri" id="pdf-dl-btn" onclick="downloadDoc()">⬇ Download</button>
+    </div>
+  </div>
+</div>
+
+<!-- Sign-out confirmation modal -->
+<div class="ov" id="logout-modal">
+  <div class="modal" style="width:380px">
+    <div class="modal-title">
+      <svg class="ic"><use href="#ic-shield"/></svg>
+      Sign out?
+    </div>
+    <div class="fhint" style="margin-bottom:16px">You'll need to enter your credentials again to sign back in. Any unsaved input will be lost.</div>
+    <div class="ma">
+      <button class="bsec" onclick="cancelLogout()">Cancel</button>
+      <button class="bdanger" onclick="confirmLogout()" id="logout-confirm-btn">Sign out</button>
+    </div>
+  </div>
+</div>
+
+<!-- (API Keys, Data Management modals were merged into #settings-modal above.) -->
+
+<!-- Master Resume Modal -->
+<div class="ov" id="view-master-modal">
+  <div class="modal" style="width:min(1180px,96vw);max-height:92vh;display:flex;flex-direction:column">
+    <button class="mx" onclick="closeViewMaster()">×</button>
+    <div class="modal-title">⭐ Master Resumes</div>
+    <input type="file" id="master-file-input" accept=".json" style="display:none" onchange="handleMasterFile(event)">
+
+    <!-- Empty state -->
+    <div id="vm-empty" style="text-align:center;padding:32px 16px;color:var(--text3)">
+      <div style="font-size:32px;margin-bottom:12px">⭐</div>
+      <div style="font-size:14px;font-weight:600;color:var(--text2);margin-bottom:6px">No master resumes saved</div>
+      <div style="font-size:12px;margin-bottom:20px">Generate a resume and click <strong>Set as Master</strong>, or upload an existing JSON file.</div>
+      <button class="bpri" onclick="document.getElementById('master-file-input').click()"><svg class="ic" style="width:14px;height:14px"><use href="#ic-attach"/></svg> Upload JSON</button>
+    </div>
+
+    <!-- Saved state -->
+    <div id="vm-saved" style="display:none;flex:1;min-height:0;flex-direction:row;gap:14px">
+      <!-- Left column: list of saved resumes -->
+      <div style="width:260px;flex-shrink:0;display:flex;flex-direction:column;border:1px solid var(--bdr);border-radius:8px;overflow:hidden">
+        <div style="padding:10px 12px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--bg2)">
+          <div style="font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em"><span id="vm-count">0</span> saved</div>
+          <button class="bsec" style="padding:4px 8px;font-size:12px" onclick="document.getElementById('master-file-input').click()" title="Upload a JSON resume as a new master">+ New</button>
+        </div>
+        <div id="vm-list" style="overflow-y:auto;flex:1;padding:6px"></div>
+      </div>
+      <!-- Right column: selected resume viewer -->
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-shrink:0;gap:8px">
+          <div style="min-width:0;display:flex;align-items:center;gap:8px;flex:1">
+            <input id="vm-name-input" class="fi" type="text" placeholder="Name this master resume" style="flex:1;min-width:0;font-size:14px;font-weight:600" oninput="_vmNameDirty=true" onchange="renameSelectedMaster()" onblur="renameSelectedMaster()">
+            <button class="bsec" id="vm-default-btn" onclick="setSelectedMasterDefault()" title="Use this resume by default when attaching" style="white-space:nowrap;flex-shrink:0">☆ Set default</button>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-shrink:0;gap:8px;flex-wrap:wrap">
+          <div style="min-width:0">
+            <div id="vm-name" style="font-size:13px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+            <div id="vm-role" style="font-size:12px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
+            <button class="bsec" onclick="replaceSelectedMaster()" title="Replace this resume's JSON from a file"><svg class="ic" style="width:13px;height:13px"><use href="#ic-attach"/></svg> Replace</button>
+            <button class="bsec" onclick="copyMasterJson()"><svg class="ic" style="width:13px;height:13px"><use href="#ic-copy"/></svg> Copy JSON</button>
+            <button class="bsec" onclick="downloadMasterJson()"><svg class="ic" style="width:13px;height:13px"><use href="#ic-download"/></svg> JSON</button>
+            <button class="bpri" onclick="openMasterPdf()"><svg class="ic" style="width:13px;height:13px"><use href="#ic-download"/></svg> Download Resume</button>
+            <button class="bdanger" onclick="deleteSelectedMaster()">Delete</button>
+          </div>
+        </div>
+        <div id="vm-body" class="jv" style="overflow-y:auto;flex:1;border:1px solid var(--bdr);border-radius:8px"></div>
+      </div>
+    </div>
+
+    <div class="ma" style="margin-top:12px;flex-shrink:0">
+      <button class="bsec" onclick="closeViewMaster()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Application Tracker Modal -->
+<div class="ov" id="tracker-modal">
+  <div class="modal" style="width:460px">
+    <button class="mx" onclick="closeTracker()">×</button>
+    <div class="modal-title"><svg class="ic" style="margin-right:6px"><use href="#ic-briefcase"/></svg>Application Tracker</div>
+    <input type="hidden" id="tracker-sid">
+    <div class="fg">
+      <label class="fl">Status</label>
+      <div class="stat-pick">
+        <button class="stat-btn" data-val="" onclick="pickStatus(this)">— None</button>
+        <button class="stat-btn" data-val="saved" onclick="pickStatus(this)"><svg class="ic sm"><use href="#ic-bookmark"/></svg> Saved</button>
+        <button class="stat-btn" data-val="applied" onclick="pickStatus(this)"><svg class="ic sm"><use href="#ic-send"/></svg> Applied</button>
+        <button class="stat-btn" data-val="phone_screen" onclick="pickStatus(this)"><svg class="ic sm"><use href="#ic-phone"/></svg> Phone Screen</button>
+        <button class="stat-btn" data-val="interviewing" onclick="pickStatus(this)"><svg class="ic sm"><use href="#ic-users"/></svg> Interviewing</button>
+        <button class="stat-btn" data-val="offer" onclick="pickStatus(this)"><svg class="ic sm"><use href="#ic-trophy"/></svg> Offer</button>
+        <button class="stat-btn" data-val="rejected" onclick="pickStatus(this)"><svg class="ic sm"><use href="#ic-x-circle"/></svg> Rejected</button>
+        <button class="stat-btn" data-val="withdrawn" onclick="pickStatus(this)"><svg class="ic sm"><use href="#ic-ban"/></svg> Withdrawn</button>
+      </div>
+    </div>
+    <div class="fg">
+      <label class="fl">Apply URL</label>
+      <div style="display:flex;gap:6px">
+        <input type="url" class="fi" id="tracker-url" placeholder="https://jobs.company.com/…" oninput="toggleApplyOpen()">
+        <button class="bsec" id="tracker-url-open" onclick="openApplyUrl()" style="display:none;white-space:nowrap;flex-shrink:0">Open ↗</button>
+      </div>
+    </div>
+    <div class="fg">
+      <label class="fl">Account / Email used</label>
+      <input type="text" class="fi" id="tracker-account" placeholder="email or username you applied with">
+    </div>
+    <div class="fg">
+      <label class="fl">Password <span style="color:var(--text3);font-weight:400;font-size:11px">— stored locally in SQLite only</span></label>
+      <div style="display:flex;gap:6px">
+        <input type="password" class="fi" id="tracker-password" placeholder="password for this account" style="flex:1">
+        <button class="bsec" id="tracker-pw-eye" onclick="toggleTrackerPw()" style="white-space:nowrap;flex-shrink:0">Show</button>
+      </div>
+    </div>
+    <div class="fg">
+      <label class="fl">Notes</label>
+      <textarea class="fi" id="tracker-notes" rows="3" placeholder="Recruiter name, salary range, interview stages…" style="resize:vertical;min-height:68px"></textarea>
+    </div>
+    <div class="ma"><button class="bsec" onclick="closeTracker()">Cancel</button><button class="bpri" onclick="saveTracker()">Save</button></div>
+  </div>
+</div>
+
+<!-- Resume Diff Modal -->
+<div class="ov" id="diff-modal">
+  <div class="modal" style="width:660px;max-height:82vh;display:flex;flex-direction:column">
+    <button class="mx" onclick="closeDiff()">×</button>
+    <div class="modal-title" style="margin-bottom:4px"><svg class="ic" style="margin-right:6px"><use href="#ic-refresh"/></svg>Resume Changes <span id="diff-ver" style="font-size:13px;color:var(--text3);font-weight:400;margin-left:4px"></span></div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:16px;flex-shrink:0"><span class="df-del">removed</span> &nbsp;·&nbsp; <span class="df-add">added</span></div>
+    <div id="diff-body" style="overflow-y:auto;flex:1;padding-right:4px"></div>
+  </div>
+</div>
+
+<!-- Login Modal -->
+<div class="ov" id="login-modal">
+  <div class="modal" style="width:380px">
+    <div class="modal-title">
+      <svg class="ic"><use href="#ic-shield"/></svg>
+      Sign in
+    </div>
+    <div class="fhint" style="margin-bottom:14px">This StackResume instance is protected. Enter the admin credentials configured in <code style="font-size:11px;background:var(--bg3);padding:1px 4px;border-radius:3px">.env</code>.</div>
+    <div class="fg"><label class="fl">Username</label><input type="text" class="fi" id="login-user" autocomplete="username"></div>
+    <div class="fg"><label class="fl">Password</label><input type="password" class="fi" id="login-pass" autocomplete="current-password"></div>
+    <div id="login-err" style="font-size:12.5px;color:var(--red);margin-bottom:10px;display:none"></div>
+    <div class="ma">
+      <button class="bpri" onclick="doLogin()" style="width:100%;display:flex;justify-content:center">Sign in</button>
+    </div>
+  </div>
+</div>
+
+<!-- (Usage Metrics modal merged into #settings-modal above.) -->
+
+<div id="toast"></div>
+
+<script src="/assets/js/auth.js"></script>
+<script src="/assets/js/state.js"></script>
+<script src="/assets/js/init.js"></script>
+<script src="/assets/js/mobile-sidebar.js"></script>
+<script src="/assets/js/sessions.js"></script>
+<script src="/assets/js/toolbar.js"></script>
+<script src="/assets/js/send.js"></script>
+<script src="/assets/js/poll.js"></script>
+<script src="/assets/js/render.js"></script>
+<script src="/assets/js/json-viewer.js"></script>
+<script src="/assets/js/editor.js"></script>
+<script src="/assets/js/letters.js"></script>
+<script src="/assets/js/preview.js"></script>
+<script src="/assets/js/toggles.js"></script>
+<script src="/assets/js/settings.js"></script>
+<script src="/assets/js/keys.js"></script>
+<script src="/assets/js/metrics.js"></script>
+<script src="/assets/js/section-prefs.js"></script>
+<script src="/assets/js/upload.js"></script>
+<script src="/assets/js/memory.js"></script>
+<script src="/assets/js/pdf.js"></script>
+<script src="/assets/js/data-mgmt.js"></script>
+<script src="/assets/js/master-resumes.js"></script>
+<script src="/assets/js/versions.js"></script>
+<script src="/assets/js/tracker.js"></script>
+<script src="/assets/js/diff.js"></script>
+<script src="/assets/js/shortcuts.js"></script>
+<script src="/assets/js/bootstrap.js"></script>
+</body>
+</html>

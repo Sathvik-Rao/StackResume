@@ -1,0 +1,31 @@
+{
+  "name": "StackResume",
+  "slug": "stackresume",
+  "description": "AI-powered resume builder for software developers. Multi-agent pipeline that turns minimal input into a polished, ATS-optimised resume.",
+  "lead_author": "Sathvik Rao",
+  "license": "GPL-3.0",
+  "repository": "https://github.com/Sathvik-Rao/StackResume",
+  "docker_image": "sathvikrao/stackresume:latest",
+  "homepage": "http://localhost:8000",
+  "keywords": [
+    "resume-builder",
+    "ai",
+    "multi-agent",
+    "langgraph",
+    "langchain",
+    "fastapi",
+    "ats",
+    "cover-letter",
+    "pdf",
+    "docx"
+  ],
+  "stack": {
+    "backend": "FastAPI",
+    "ai_orchestration": "LangGraph",
+    "database": "SQLite",
+    "frontend": "Vanilla HTML/CSS/JS"
+  },
+  "supported_providers": ["openai", "anthropic", "google", "ollama", "custom"],
+  "export_formats": ["pdf", "docx", "odt"],
+  "python_requires": ">=3.13"
+}

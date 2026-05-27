@@ -1,0 +1,18 @@
+/* Collapsible JSON / preview / edit viewer attached to each generated resume message. */
+.jv{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:10px}
+.jv-tb{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;background:var(--bg3);border-bottom:1px solid var(--border);flex-wrap:wrap;gap:8px}
+.jv-l{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.jv-title{font-size:12px;font-weight:500;color:var(--text2)}
+.tabs{display:flex;gap:3px}
+.jtab{padding:3px 9px;border-radius:5px;font-size:11.5px;cursor:pointer;border:1px solid transparent;color:var(--text3);background:none;font-family:var(--font);transition:all .1s}
+.jtab:hover{color:var(--text2);background:var(--bg4)}.jtab.on{background:var(--bg4);border-color:var(--border2);color:var(--accent2)}
+.jv-r{display:flex;gap:5px;flex-wrap:wrap}
+.ibtn{padding:4px 9px;background:none;border:1px solid var(--border);border-radius:6px;color:var(--text2);font-size:11.5px;cursor:pointer;font-family:var(--font);display:flex;align-items:center;gap:4px;transition:all .1s}
+.ibtn:hover{background:var(--bg4);border-color:var(--border2);color:var(--text)}
+.ibtn.pri{background:var(--abg);border-color:var(--ab);color:var(--accent2)}.ibtn.pri:hover{background:rgba(124,131,255,.22)}
+.ibtn.pdf{background:var(--gbg);border-color:rgba(34,211,160,.3);color:var(--green)}.ibtn.pdf:hover{background:rgba(34,211,160,.18)}
+.jvb{max-height:520px;overflow-y:auto;padding:14px 16px}
+.jvb::-webkit-scrollbar{width:4px}.jvb::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+pre.jp{font-family:var(--mono);font-size:12.5px;line-height:1.7;color:var(--text2);white-space:pre-wrap;word-break:break-word}
+.jk{color:#7dd3fc}.js{color:#86efac}.jn{color:#fb923c}.jb{color:#c084fc}
+:root[data-theme="light"] .jk{color:#0369a1}:root[data-theme="light"] .js{color:#15803d}:root[data-theme="light"] .jn{color:#c2410c}:root[data-theme="light"] .jb{color:#7c3aed}
