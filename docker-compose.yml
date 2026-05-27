@@ -1,8 +1,8 @@
 services:
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend/Dockerfile
     container_name: stackresume-backend
     ports:
       - "8000:8000"
@@ -67,8 +67,8 @@ services:
   tests:
     profiles: ["test"]
     build:
-      context: ./backend
-      dockerfile: Dockerfile.test
+      context: .
+      dockerfile: backend/Dockerfile.test
     container_name: stackresume-tests
     environment:
       # Hard-blank any provider keys so tests never accidentally hit a real LLM.
