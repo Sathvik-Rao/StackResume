@@ -23,6 +23,12 @@ name: ci
 #     DOCKERHUB_IMAGE      – (optional) image name, defaults to "stackresume"
 #   Secrets:
 #     DOCKERHUB_TOKEN      – a Docker Hub access token with Read/Write/Delete
+#     RELEASE_PAT          – a fine-grained PAT (or classic PAT with `repo` scope)
+#                            used to push the auto-generated vX.Y.Z tag. Required
+#                            because GitHub deliberately suppresses workflow
+#                            triggers for pushes made with the default
+#                            GITHUB_TOKEN — without this, the tag-triggered
+#                            Docker build (vX.Y.Z / vX.Y / vX tags) never fires.
 
 on:
   push:
@@ -143,6 +149,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0  # need full history to walk tags
+          token: ${{ secrets.RELEASE_PAT }}
 
       - name: Compute next semver
         id: version
@@ -199,7 +206,7 @@ jobs:
       - name: Push tag and create GitHub release
         if: steps.version.outputs.skip == 'false'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.RELEASE_PAT }}
           NEW_TAG:  ${{ steps.version.outputs.new_tag }}
         run: |
           git config user.name  "github-actions[bot]"
