@@ -11,6 +11,15 @@
   ![Self-hosted](https://img.shields.io/badge/self--hosted-yes-8B5CF6)
   ![Open Source](https://img.shields.io/badge/open%20source-GPL--3.0-22C55E)
   ![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen)
+
+  <br/><br/>
+  <img src="https://github.com/user-attachments/assets/1d49292e-c9a6-4e06-8af3-e73699d37269" alt="StackResume UI" width="900" />
+
+  <br/><br/>
+  
+  <video src="https://github.com/user-attachments/assets/f4eaccab-9c2f-4d16-b0ad-02ddf71e8004" controls width="900">
+    Your browser does not support the video tag.
+  </video>
 </div>
 
 ---
