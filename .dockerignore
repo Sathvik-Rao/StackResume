@@ -1,0 +1,40 @@
+# Keep the build context small now that it's the repo root.
+.git
+.github
+.gitignore
+.dockerignore
+
+# Local-only state and docs
+data
+logo
+*.md
+LICENSE
+docker-compose.yml
+
+# Python cruft
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/*.egg-info
+**/.venv
+**/venv
+**/env
+**/.pytest_cache
+**/.coverage
+**/htmlcov
+**/.mypy_cache
+**/.dmypy.json
+**/.ipynb_checkpoints
+
+# Secrets and env
+**/*.key
+**/*.pem
+**/secrets
+.env
+.env.*
+
+# Editor / OS
+.DS_Store
+.idea
+.vscode
