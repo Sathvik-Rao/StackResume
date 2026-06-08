@@ -13,6 +13,8 @@
   #sb.mobile-open{transform:translateX(0)!important}
   #sb.collapsed{transform:translateX(-100%)!important;width:var(--sw)!important;min-width:var(--sw)!important}
   .sb-expand{display:none!important}
+  /* No edge-resizing in the mobile drawer. */
+  .sb-resizer{display:none!important}
   .mob-menu-btn{display:flex}
 
   /* Main fills the full screen — dvh keeps it within the actual visible area on iOS */

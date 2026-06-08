@@ -36,7 +36,7 @@ class CoverLetterPDFRequest(BaseModel):
     inline: bool = False         # true → render inline (preview iframe), false → download
 
 
-ALLOWED_TEMPLATES = {"classic_ats", "modern_clean", "executive_dark", "dark_theme"}
+ALLOWED_TEMPLATES = {"classic_ats", "modern_clean", "executive_dark", "dark_theme", "latex_serif"}
 # Presets stay for the UI labels; numeric strings in [8.0, 13.0] also accepted
 # (see is_valid_font_size). The slider sends e.g. "10.3".
 ALLOWED_FONT_PRESETS = {"small", "normal", "large"}

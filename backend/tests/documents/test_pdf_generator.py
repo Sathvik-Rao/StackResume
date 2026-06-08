@@ -43,6 +43,63 @@ def test_resume_pdf_dark_theme_renders(sample_resume):
     assert pdf.startswith(b"%PDF")
 
 
+@pytest.mark.parametrize("font_size", ["small", "normal", "large"])
+def test_resume_pdf_latex_serif_renders(sample_resume, font_size):
+    """latex_serif is the PDF-only LaTeX-style template (bundled Computer Modern
+    font, small-caps name, icon contact line). The name is rendered in small-caps
+    so we match it case-insensitively; section headers stay Title-Case."""
+    from app.documents.pdf_generator import generate_pdf
+
+    pdf = generate_pdf(sample_resume, template="latex_serif", font_size=font_size, max_pages="auto")
+    assert pdf.startswith(b"%PDF")
+    assert len(pdf) > 5_000
+    text = _extract_text(pdf)
+    assert "LOVELACE" in text.upper()
+    assert "Professional Experience" in text  # Title-Case heading, not UPPERCASE
+
+
+def test_resume_pdf_latex_serif_embeds_computer_modern(sample_resume):
+    """The whole point of this template is the LaTeX typeface — assert the
+    bundled Computer Modern face is actually registered and embedded, so a
+    broken font path degrades loudly in CI rather than silently to Times."""
+    from app.documents.pdf_generator import generate_pdf, _ensure_cm_fonts
+
+    assert _ensure_cm_fonts() is True, "CMU Serif fonts failed to register"
+    pdf = generate_pdf(sample_resume, template="latex_serif")
+    assert b"CMUSerif" in pdf  # embedded font resource name appears in the PDF
+
+
+def test_resume_pdf_latex_serif_embeds_fontawesome(sample_resume):
+    """Contact icons are real Font Awesome glyphs (the same the LaTeX template
+    uses), so the FA faces must register and embed — otherwise icons vanish."""
+    from app.documents.pdf_generator import generate_pdf, _ensure_fa_fonts
+
+    assert _ensure_fa_fonts() is True, "Font Awesome fonts failed to register"
+    # SAMPLE_RESUME has phone/email/location + linkedin/github/website → solid + brands.
+    # The faces embed under their internal PostScript names (renamed so DOCX/ODT
+    # can resolve them unambiguously).
+    pdf = generate_pdf(sample_resume, template="latex_serif")
+    assert b"SRFASolid" in pdf
+    assert b"SRFABrands" in pdf
+
+
+def test_resume_pdf_latex_serif_minimal(minimal_resume):
+    """Serif builder must degrade gracefully when most sections are absent."""
+    from app.documents.pdf_generator import generate_pdf
+
+    pdf = generate_pdf(minimal_resume, template="latex_serif")
+    assert pdf.startswith(b"%PDF")
+    assert "HOPPER" in _extract_text(pdf).upper()
+
+
+def test_resume_pdf_latex_serif_max_pages_1(sample_resume):
+    """The shrink-to-fit loop dispatches through the serif renderer too."""
+    from app.documents.pdf_generator import generate_pdf, _page_count
+
+    pdf = generate_pdf(sample_resume, template="latex_serif", max_pages="1", font_size="small")
+    assert _page_count(pdf) <= 1
+
+
 def test_resume_pdf_minimal_resume(minimal_resume):
     from app.documents.pdf_generator import generate_pdf
 

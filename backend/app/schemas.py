@@ -176,7 +176,7 @@ class SessionsPage(BaseModel):
 # ── Document export schemas ───────────────────────────────────────────────────
 class PDFGenerateRequest(BaseModel):
     resume_json: dict
-    template: str = "classic_ats"    # classic_ats | modern_clean | executive_dark
+    template: str = "classic_ats"    # classic_ats | modern_clean | executive_dark | dark_theme | latex_serif
     font_size: str = "normal"        # small | normal | large
     max_pages: str = "auto"          # 1 | 2 | auto  (only meaningful for PDF)
     format: str = "pdf"              # pdf | docx | odt

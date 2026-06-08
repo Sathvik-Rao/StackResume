@@ -62,7 +62,8 @@ async function saveCfg(){
   _modelsByProvider[p]=m;
   try{localStorage.setItem('sr_models_by_provider',JSON.stringify(_modelsByProvider));}catch(e){}
   localStorage.setItem('sr_p',p);localStorage.setItem('sr_m',m);
-  updProvPill();closeCfg();showToast('✓ Settings saved — '+p+' / '+m);
+  // Keep the Settings panel open after saving — it only closes via Cancel or ✕.
+  updProvPill();showToast('✓ Settings saved — '+p+' / '+m);
   // Collect base URLs from the model tab inputs.
   const _saveBody={models_by_provider:_modelsByProvider};
   const _ollamaUrl=(document.getElementById('model-ollama-url')||{}).value||'';
