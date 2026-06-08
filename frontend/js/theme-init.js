@@ -11,4 +11,12 @@
   } catch (e) {
     document.documentElement.setAttribute('data-theme', 'dark');
   }
+  // Restore the saved sidebar width pre-paint so it doesn't flash at the
+  // default. The drag handler (sidebar-resize.js) maintains this value.
+  try {
+    var w = parseInt(localStorage.getItem('sr_sidebar_w'), 10);
+    if (w && w >= 200 && w <= 600) {
+      document.documentElement.style.setProperty('--sw', w + 'px');
+    }
+  } catch (e) {}
 })();

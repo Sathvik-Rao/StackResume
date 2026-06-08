@@ -1,6 +1,15 @@
 /* Sidebar — chrome, search, sessions list, footer buttons, and the mobile-overlay backdrop. */
-#sb{width:var(--sw);min-width:var(--sw);height:100vh;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;transition:width .22s ease,min-width .22s ease}
+#sb{width:var(--sw);min-width:var(--sw);height:100vh;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;transition:width .22s ease,min-width .22s ease;position:relative}
 #sb.collapsed{width:0;min-width:0;border-right:0;overflow:hidden}
+/* Suspend the width animation while the user is actively dragging the handle. */
+#sb.sb-resizing{transition:none}
+
+/* Right-edge drag handle for resizing the sidebar. */
+.sb-resizer{position:absolute;top:0;right:-3px;width:6px;height:100%;cursor:col-resize;z-index:40;touch-action:none}
+.sb-resizer::after{content:"";position:absolute;top:0;left:2px;width:2px;height:100%;background:transparent;transition:background .15s}
+.sb-resizer:hover::after,body.sb-resizing .sb-resizer::after{background:var(--ab)}
+#sb.collapsed .sb-resizer{display:none}
+body.sb-resizing{cursor:col-resize;user-select:none}
 .sb-expand{position:absolute;left:8px;top:62px;z-index:30;width:34px;height:34px;background:var(--bg3);border:1px solid var(--border2);border-radius:9px;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
 .sb-expand:hover{background:var(--bg4);color:var(--text)}
 .sb-collapse{margin-left:auto;background:none;border:none;color:var(--text3);cursor:pointer;padding:4px 6px;border-radius:6px;display:flex;align-items:center;justify-content:center}

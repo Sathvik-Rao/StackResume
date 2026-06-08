@@ -31,8 +31,8 @@ async function saveKeys(){
   try{
     const r=await fetch(`${API}/api/app-settings`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(_collectKeysBody())});
     if(!r.ok)throw new Error(await r.text());
+    // Keep the Settings panel open after saving — it only closes via Cancel or ✕.
     showToast('Settings saved');
-    closeSettingsModal();
   }catch(e){showToast('Save failed: '+e.message);}
 }
 async function testLangsmith(){

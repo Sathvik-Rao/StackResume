@@ -12,6 +12,43 @@ function openDiff(msgId,sessionId){
 function closeDiff(){document.getElementById('diff-modal').classList.remove('open');}
 document.getElementById('diff-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeDiff();});
 
+// Line-aware diff. Aligns unchanged lines first (each bullet/point is a line),
+// then runs the word-level diff only inside the line pairs that actually
+// changed. This keeps a small wording tweak in one bullet from lighting up
+// every bullet, and keeps each word-level diff small enough to stay precise.
+function _diffText(a,b){
+  a=a==null?'':String(a);b=b==null?'':String(b);
+  if(a===b)return esc(a);
+  const al=a.split('\n'),bl=b.split('\n');
+  if(al.length<2&&bl.length<2)return _diffWords(a,b);
+  const m=al.length,n=bl.length;
+  const dp=Array.from({length:m+1},()=>new Array(n+1).fill(0));
+  for(let i=1;i<=m;i++)for(let j=1;j<=n;j++)
+    dp[i][j]=al[i-1]===bl[j-1]?dp[i-1][j-1]+1:Math.max(dp[i-1][j],dp[i][j-1]);
+  const ops=[];let i=m,j=n;
+  while(i>0||j>0){
+    if(i>0&&j>0&&al[i-1]===bl[j-1]){ops.unshift({t:'=',v:al[i-1]});i--;j--;}
+    else if(j>0&&(i===0||dp[i][j-1]>=dp[i-1][j])){ops.unshift({t:'+',v:bl[j-1]});j--;}
+    else{ops.unshift({t:'-',v:al[i-1]});i--;}
+  }
+  const out=[];
+  for(let k=0;k<ops.length;){
+    if(ops[k].t==='='){out.push(esc(ops[k].v));k++;continue;}
+    // Gather a contiguous run of changed lines, then pair removed lines with
+    // added lines so a reworded bullet gets word-level highlighting instead of
+    // a full delete + full add.
+    const dels=[],adds=[];
+    while(k<ops.length&&ops[k].t!=='='){
+      (ops[k].t==='-'?dels:adds).push(ops[k].v);k++;
+    }
+    const pairs=Math.min(dels.length,adds.length);
+    for(let p=0;p<pairs;p++)out.push(_diffWords(dels[p],adds[p]));
+    for(let p=pairs;p<dels.length;p++)out.push(`<span class="df-del">${esc(dels[p])}</span>`);
+    for(let p=pairs;p<adds.length;p++)out.push(`<span class="df-add">${esc(adds[p])}</span>`);
+  }
+  return out.join('\n');
+}
+
 function _diffWords(a,b){
   if(!a&&!b)return'';
   if(!a)return`<span class="df-add">${esc(b)}</span>`;
@@ -19,7 +56,7 @@ function _diffWords(a,b){
   if(a===b)return esc(a);
   const aw=a.split(/(\s+)/),bw=b.split(/(\s+)/);
   const m=aw.length,n=bw.length;
-  if(m*n>15000)return`<span class="df-del">${esc(a)}</span>\n<span class="df-add">${esc(b)}</span>`;
+  if(m*n>1000000)return`<span class="df-del">${esc(a)}</span>\n<span class="df-add">${esc(b)}</span>`;
   const dp=Array.from({length:m+1},()=>new Array(n+1).fill(0));
   for(let i=1;i<=m;i++)for(let j=1;j<=n;j++)
     dp[i][j]=aw[i-1]===bw[j-1]?dp[i-1][j-1]+1:Math.max(dp[i-1][j],dp[i][j-1]);
@@ -34,7 +71,7 @@ function _diffWords(a,b){
 
 function _buildDiffHtml(a,b){
   const secs=[];
-  const check=(title,va,vb)=>{if(va!==vb)secs.push({title,html:_diffWords(va||'',vb||'')});};
+  const check=(title,va,vb)=>{if(va!==vb)secs.push({title,html:_diffText(va||'',vb||'')});};
 
   check('Professional Summary',a.professional_summary,b.professional_summary);
 
@@ -48,7 +85,7 @@ function _buildDiffHtml(a,b){
     const pj=expA[idx];
     const txtA=pj?[...(pj.responsibilities||[]),...(pj.achievements||[])].join('\n'):'';
     const txtB=[...(job.responsibilities||[]),...(job.achievements||[])].join('\n');
-    if(txtA!==txtB)secs.push({title:`Experience — ${job.title} @ ${job.company}`,html:_diffWords(txtA,txtB)});
+    if(txtA!==txtB)secs.push({title:`Experience — ${job.title} @ ${job.company}`,html:_diffText(txtA,txtB)});
   });
 
   const skA=Object.values(a.technical_skills||{}).flat().join(', ');

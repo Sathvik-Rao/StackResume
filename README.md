@@ -49,7 +49,7 @@ StackResume turns minimal input into a polished, interview-ready software-develo
 - **Generates** a complete resume JSON with STAR-format bullets and quantified metrics.
 - **Reviews & enhances** in a loop — a Reviewer agent scores ATS compatibility, writing quality, impact, and completeness (0–100 each), then an Enhancer rewrites weak bullets and injects missing keywords. Loops until the score crosses `MIN_QUALITY_SCORE` (default 82) or hits `MAX_REVIEW_ITERATIONS` (default 3).
 - **Tailors** — paste a job description to unlock a cover letter and a library of outreach email templates alongside the resume.
-- **Exports** to PDF, Word (`.docx`), or OpenDocument (`.odt`) across four visual templates.
+- **Exports** to PDF, Word (`.docx`), or OpenDocument (`.odt`) across five visual templates.
 
 Everything is wrapped in a chat-style web UI with persistent sessions, search, favourites, an application tracker, and a live LLM activity log.
 
@@ -249,7 +249,7 @@ Every resume has an **✏ Edit** tab for inline editing of every section — sum
 | **Word (`.docx`)** | Editable in Word / Google Docs / Pages. |
 | **OpenDocument (`.odt`)** | Editable in LibreOffice / OpenOffice. |
 
-Four templates: **Classic ATS** (max ATS compatibility), **Modern Clean** (blue accents), **Executive** (dark slate), **Dark Theme** (deep navy). Font size (9 / 10 / 11pt) and page cap (auto / 1 / 2) configurable per export. The Export modal includes a **live side-by-side PDF preview** that updates as you change options.
+Five templates: **Classic ATS** (max ATS compatibility), **Modern Clean** (blue accents), **Executive** (dark slate), **Dark Theme** (deep navy), and **LaTeX** (serif, academic — Computer Modern with Font Awesome icons). Font size (9 / 10 / 11pt) and page cap (auto / 1 / 2) configurable per export. The Export modal includes a **live side-by-side PDF preview** that updates as you change options.
 
 ### Application tracker
 

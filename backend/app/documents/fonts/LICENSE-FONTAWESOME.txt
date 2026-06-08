@@ -1,0 +1,27 @@
+Font Awesome Free — bundled with StackResume
+============================================
+
+Files:
+    fa-solid-900.ttf   (Font Awesome 6 Free, Solid style)
+    fa-brands-400.ttf  (Font Awesome 6 Free, Brands style)
+
+Used by the `latex_serif` ("LaTeX") résumé template to render contact icons
+(phone, envelope, map-marker, globe, LinkedIn, GitHub) as real glyphs — the same
+icons the LaTeX `fontawesome5` package emits — so the output matches a
+pdfLaTeX-compiled résumé exactly.
+
+Source:  https://fontawesome.com  /  https://github.com/FortAwesome/Font-Awesome
+Version: 6.x (Free)
+
+License (Font Awesome Free):
+  - Icons (the glyph artwork): CC BY 4.0
+      https://creativecommons.org/licenses/by/4.0/
+  - Fonts (the .ttf/.woff files): SIL OFL 1.1
+      https://scripts.sil.org/OFL
+  - Code (not bundled here): MIT
+
+Attribution: "Font Awesome Free by @fontawesome - https://fontawesome.com".
+
+The fonts are redistributed unmodified under the SIL Open Font License v1.1.
+A full copy of the OFL 1.1 text is included in LICENSE-CMU.txt in this directory
+and applies equally to these font files.

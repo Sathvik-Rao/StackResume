@@ -21,7 +21,7 @@ async def test_generate_resume_each_format(async_client, sample_resume, fmt, con
     assert r.content[:4].startswith(magic[:4]) or r.content[:2] == magic[:2]
 
 
-@pytest.mark.parametrize("template", ["classic_ats", "modern_clean", "executive_dark", "dark_theme"])
+@pytest.mark.parametrize("template", ["classic_ats", "modern_clean", "executive_dark", "dark_theme", "latex_serif"])
 async def test_each_template_pdf(async_client, sample_resume, template):
     r = await async_client.post(
         "/api/documents/generate",

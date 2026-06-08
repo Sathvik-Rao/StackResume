@@ -54,6 +54,31 @@ def test_docx_minimal(minimal_resume):
     assert "Grace Hopper" in text
 
 
+@pytest.mark.parametrize("font_size", ["small", "normal", "large"])
+def test_docx_latex_serif_embeds_fonts(sample_resume, font_size):
+    """latex_serif DOCX mirrors the PDF: Computer Modern + Font Awesome embedded
+    into the package so it renders the same on any machine."""
+    import zipfile
+
+    from app.documents.docx_generator import generate_docx_resume
+
+    data = generate_docx_resume(sample_resume, template="latex_serif", font_size=font_size)
+    assert data[:2] == b"PK"
+    assert "Ada Lovelace" in _extract_text(data)
+    z = zipfile.ZipFile(io.BytesIO(data))
+    assert any("word/fonts/font" in n for n in z.namelist()), "fonts not embedded"
+    ft = z.read("word/fontTable.xml").decode()
+    assert "CMU Serif" in ft and "SR FA Solid" in ft and "SR FA Brands" in ft
+
+
+def test_docx_latex_serif_minimal(minimal_resume):
+    from app.documents.docx_generator import generate_docx_resume
+
+    data = generate_docx_resume(minimal_resume, template="latex_serif")
+    assert data[:2] == b"PK"
+    assert "Grace Hopper" in _extract_text(data)
+
+
 def test_docx_cover_letter(sample_resume):
     from app.documents.docx_generator import generate_docx_cover_letter
 

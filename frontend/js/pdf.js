@@ -137,7 +137,7 @@ async function updateExportPreview(){
     empty.style.display='flex';
   }
 }
-function _tmplLabel(t){return {classic_ats:'Classic ATS',modern_clean:'Modern Clean',executive_dark:'Executive',dark_theme:'Dark Theme'}[t]||t;}
+function _tmplLabel(t){return {classic_ats:'Classic ATS',modern_clean:'Modern Clean',executive_dark:'Executive',dark_theme:'Dark Theme',latex_serif:'LaTeX'}[t]||t;}
 
 async function downloadDoc(){
   if(exportKind==='coverletter'){return downloadCoverLetter();}

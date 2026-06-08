@@ -6,19 +6,25 @@ across all three formats: classic_ats / modern_clean / executive_dark.
 from __future__ import annotations
 
 import io
+import os
+import re
+import zipfile
 from datetime import date
 from typing import Literal
 
 from odf.opendocument import OpenDocumentText
 from odf.style import (
     Style, TextProperties, ParagraphProperties, TableColumnProperties,
-    TableProperties, TableCellProperties, TabStop, TabStops,
+    TableProperties, TableCellProperties, TabStop, TabStops, GraphicProperties,
 )
-from odf.text import P, Span, A, Tab
+from odf.text import P, Span, A, Tab, S
 from odf.table import Table, TableColumn, TableRow, TableCell
+from odf.draw import Frame, Image as DrawImage
 
 
-TemplateName = Literal["classic_ats", "modern_clean", "executive_dark", "dark_theme"]
+TemplateName = Literal[
+    "classic_ats", "modern_clean", "executive_dark", "dark_theme", "latex_serif"
+]
 FontSize = Literal["small", "normal", "large"]
 
 
@@ -39,6 +45,12 @@ PALETTES_HEX = {
         "bg": "#0d0f1a",
         "name": "#e8eaf2", "title": "#a4a8ff", "header": "#e8eaf2",
         "rule": "#7c83ff", "body": "#d0d4e8", "muted": "#9098b3", "accent": "#a4a8ff",
+    },
+    # latex_serif is a PDF-only serif layout; for ODT we fall back to a clean
+    # all-black light palette so the same selection still exports sensibly.
+    "latex_serif": {
+        "name": "#000000", "title": "#1a1a1a", "header": "#000000",
+        "rule": "#000000", "body": "#111111", "muted": "#333333", "accent": "#000000",
     },
 }
 
@@ -100,44 +112,69 @@ class _Styles:
         self.base = base
         self._counter = 0
         self._cache: dict[str, str] = {}
+        self._icon_frame_style = None
 
     def _next(self) -> str:
         self._counter += 1
         return f"AutoStyle{self._counter}"
 
-    def text(self, *, size: float, color: str, bold: bool = False, italic: bool = False) -> str:
-        key = f"t/{size}/{color}/{int(bold)}/{int(italic)}"
+    def text(self, *, size: float, color: str, bold: bool = False, italic: bool = False,
+             font: str = "Helvetica", small_caps: bool = False) -> str:
+        key = f"t/{size}/{color}/{int(bold)}/{int(italic)}/{font}/{int(small_caps)}"
         if key in self._cache:
             return self._cache[key]
         name = self._next()
         s = Style(name=name, family="text")
-        s.addElement(TextProperties(
-            fontname="Helvetica",
+        tp_kwargs = dict(
+            fontname=font,
             fontsize=f"{size}pt",
             color=color,
             fontweight="bold" if bold else "normal",
             fontstyle="italic" if italic else "normal",
-        ))
+        )
+        if small_caps:
+            tp_kwargs["fontvariant"] = "small-caps"
+        s.addElement(TextProperties(**tp_kwargs))
         self.doc.automaticstyles.addElement(s)
         self._cache[key] = name
         return name
 
-    def hyperlink(self, color: str, size: float) -> str:
-        key = f"hl/{color}/{size}"
+    def hyperlink(self, color: str, size: float, font: str = "Helvetica",
+                  bold: bool = False, underline: bool = True) -> str:
+        key = f"hl/{color}/{size}/{font}/{int(bold)}/{int(underline)}"
         if key in self._cache:
             return self._cache[key]
         name = self._next()
         s = Style(name=name, family="text")
-        s.addElement(TextProperties(
-            fontname="Helvetica",
+        tp_kwargs = dict(
+            fontname=font,
             fontsize=f"{size}pt",
             color=color,
-            textunderlinetype="single",
-            textunderlinestyle="solid",
-        ))
+            fontweight="bold" if bold else "normal",
+        )
+        if underline:
+            tp_kwargs["textunderlinetype"] = "single"
+            tp_kwargs["textunderlinestyle"] = "solid"
+        s.addElement(TextProperties(**tp_kwargs))
         self.doc.automaticstyles.addElement(s)
         self._cache[key] = name
         return name
+
+    def icon_frame(self):
+        """Graphic Style object for an inline icon image (odfpy's Frame needs the
+        Style object, not its name): centred on the text line, no border, inline."""
+        if self._icon_frame_style is None:
+            s = Style(name=self._next(), family="graphic")
+            # For an as-char frame only the vertical alignment matters; setting
+            # horizontal pos/wrap turns it into a floating frame and spawns blank
+            # pages, so keep it minimal.
+            s.addElement(GraphicProperties(
+                verticalrel="text", verticalpos="middle",
+                border="none", padding="0cm",
+            ))
+            self.doc.automaticstyles.addElement(s)
+            self._icon_frame_style = s
+        return self._icon_frame_style
 
     def para(
         self,
@@ -149,8 +186,11 @@ class _Styles:
         bottom_border: str | None = None,
         left_indent: float = 0,
         first_line_indent: float = 0,
+        right_tab_cm: float | None = None,
+        border_weight: str = "0.5pt",
     ) -> str:
-        key = f"p/{align}/{space_before}/{space_after}/{line_height}/{bottom_border}/{left_indent}/{first_line_indent}"
+        key = (f"p/{align}/{space_before}/{space_after}/{line_height}/{bottom_border}/"
+               f"{left_indent}/{first_line_indent}/{right_tab_cm}/{border_weight}")
         if key in self._cache:
             return self._cache[key]
         name = self._next()
@@ -163,15 +203,20 @@ class _Styles:
         if line_height:
             attrs["lineheight"] = f"{int(line_height * 100)}%"
         if bottom_border:
-            attrs["borderbottom"] = f"0.5pt solid {bottom_border}"
+            attrs["borderbottom"] = f"{border_weight} solid {bottom_border}"
             attrs["paddingbottom"] = "1pt"
         if left_indent:
             attrs["marginleft"] = f"{left_indent}pt"
         if first_line_indent:
             attrs["textindent"] = f"{first_line_indent}pt"
         pp = ParagraphProperties(**attrs)
-        if left_indent and first_line_indent and first_line_indent < 0:
-            # Add a tab stop at the indent position so "•\t" aligns continuation lines exactly
+        if right_tab_cm is not None:
+            # Right-aligned tab at the text-area edge → LaTeX \hfill behaviour.
+            ts = TabStops()
+            ts.addElement(TabStop(position=f"{right_tab_cm}cm", type="right"))
+            pp.addElement(ts)
+        elif left_indent and first_line_indent and first_line_indent < 0:
+            # Tab stop at the indent so "•\t" aligns continuation lines exactly.
             ts = TabStops()
             ts.addElement(TabStop(position=f"{left_indent}pt", type="left"))
             pp.addElement(ts)
@@ -344,6 +389,612 @@ def _make_doc(*, side_cm: float, vert_cm: float, bg_color: str | None = None) ->
     mp = MasterPage(name="Standard", pagelayoutname="StdLayout")
     doc.masterstyles.addElement(mp)
     return doc
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# latex_serif — ODT twin of the PDF's LaTeX layout (Computer Modern + Font
+# Awesome icons embedded, small-caps name, Title-Case ruled headers, hfill rows,
+# italic technologies line, itemize-indented bullets).
+# ═══════════════════════════════════════════════════════════════════════════
+
+_FONTS_DIR = os.path.join(os.path.dirname(__file__), "fonts")
+_CMU = "CMU Serif"
+_FA_SOLID = "SR FA Solid"
+_FA_BRANDS = "SR FA Brands"
+_FA_ICONS = {
+    "phone":    (_FA_SOLID, ""),   # faPhone
+    "email":    (_FA_SOLID, ""),   # faEnvelope
+    "location": (_FA_SOLID, ""),   # faMapMarker
+    "linkedin": (_FA_BRANDS, ""),  # faLinkedin
+    "github":   (_FA_BRANDS, ""),  # faGithub
+    "web":      (_FA_SOLID, ""),   # faGlobe
+}
+_SERIF_CONTENT_CM = (8.5 - 2 * 0.4) * 2.54   # 19.558cm (Letter, 0.4in margins)
+_SERIF_BULLET_POS_PT = 14
+_SERIF_BULLET_TEXT_PT = 25
+
+# Embedded font-face declarations (LibreOffice "loext" weight/style mapping).
+# Only the Computer Modern text faces are embedded here — LibreOffice does NOT
+# render embedded *icon* fonts in ODT, so contact icons are inlined as PNGs
+# (rasterised from the same Font Awesome glyphs) instead.
+_LOEXT_NS = "urn:org:documentfoundation:names:experimental:office:xmlns:loext:1.0"
+_EMBED_ODT_FONTS = [
+    ("CMUSerif-Roman.ttf",      _CMU, "normal", "normal", "roman"),
+    ("CMUSerif-Bold.ttf",       _CMU, "normal", "bold",   "roman"),
+    ("CMUSerif-Italic.ttf",     _CMU, "italic", "normal", "roman"),
+    ("CMUSerif-BoldItalic.ttf", _CMU, "italic", "bold",   "roman"),
+]
+_FA_FILES = {_FA_SOLID: "fa-solid-900.ttf", _FA_BRANDS: "fa-brands-400.ttf"}
+_ICON_PNG_CACHE: dict[str, tuple[bytes, float]] = {}
+
+
+def _fa_icon_png(kind: str, color_hex: str, px: int = 72) -> tuple[bytes, float] | None:
+    """Rasterise a Font Awesome glyph to a transparent PNG (cached). Returns
+    (png_bytes, width/height aspect) or None if Pillow/the font is unavailable."""
+    key = f"{kind}/{color_hex}"
+    if key in _ICON_PNG_CACHE:
+        return _ICON_PNG_CACHE[key]
+    spec = _FA_ICONS.get(kind)
+    if not spec:
+        return None
+    try:
+        from PIL import Image, ImageDraw, ImageFont
+    except Exception:
+        return None
+    face, glyph = spec
+    h = color_hex.lstrip("#")
+    rgb = (int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16), 255)
+    font = ImageFont.truetype(os.path.join(_FONTS_DIR, _FA_FILES[face]), px)
+    probe = ImageDraw.Draw(Image.new("RGBA", (px * 2, px * 2)))
+    bbox = probe.textbbox((0, 0), glyph, font=font)
+    w, ht = bbox[2] - bbox[0], bbox[3] - bbox[1]
+    img = Image.new("RGBA", (w + 4, ht + 4), (0, 0, 0, 0))
+    ImageDraw.Draw(img).text((-bbox[0] + 2, -bbox[1] + 2), glyph, font=font, fill=rgb)
+    buf = io.BytesIO()
+    img.save(buf, "PNG")
+    out = (buf.getvalue(), img.width / img.height)
+    _ICON_PNG_CACHE[key] = out
+    return out
+
+
+def _serif_dates(start: str, end: str) -> str:
+    if start and end:
+        return f"{start} – {end}"
+    return end or start or ""
+
+
+def _srun(p: P, styles: "_Styles", text: str, size: float, color: str,
+          *, bold=False, italic=False, font=_CMU, small_caps=False):
+    span = Span(stylename=styles.text(size=size, color=color, bold=bold,
+                                      italic=italic, font=font, small_caps=small_caps))
+    span.addText(text)
+    p.addElement(span)
+
+
+def _slink(p: P, styles: "_Styles", text: str, url: str, color: str, size: float,
+           *, bold=False, underline=True):
+    a = A(href=url, type="simple")
+    span = Span(stylename=styles.hyperlink(color, size, font=_CMU, bold=bold, underline=underline))
+    span.addText(text)
+    a.addElement(span)
+    p.addElement(a)
+
+
+def _sicon(p: P, styles: "_Styles", kind: str, color: str, size: float):
+    """Inline a Font Awesome icon as a PNG image (LibreOffice won't render an
+    embedded icon font in ODT, but inline images always render)."""
+    out = _fa_icon_png(kind, color)
+    if not out:
+        return
+    png, aspect = out
+    href = styles.doc.addPictureFromString(png, "image/png")
+    h_in = (size * 0.95) / 72.0
+    w_in = h_in * aspect
+    frame = Frame(
+        stylename=styles.icon_frame(),
+        width=f"{w_in:.3f}in", height=f"{h_in:.3f}in",
+        anchortype="as-char",
+    )
+    frame.addElement(DrawImage(href=href, type="simple", show="embed", actuate="onLoad"))
+    p.addElement(frame)
+    p.addElement(S(c=1))  # real space (ODF collapses literal spaces)
+
+
+def _ssection(doc: OpenDocumentText, styles: "_Styles", title: str):
+    p = P(stylename=styles.para(align="left", space_before=6, space_after=3,
+                                line_height=1.05, bottom_border=styles.palette["rule"],
+                                border_weight="0.6pt"))
+    _srun(p, styles, title, styles.base + 2.5, styles.palette["header"], bold=True)
+    doc.text.addElement(p)
+
+
+def _serif_gap(doc: OpenDocumentText, styles: "_Styles"):
+    p = P(stylename=styles.para(space_after=0, line_height=1.0))
+    _srun(p, styles, "", 3, "#ffffff")
+    doc.text.addElement(p)
+
+
+def _shrow(doc: OpenDocumentText, styles: "_Styles", fill_left, right_text: str,
+           right_size: float, right_color: str, *, right_bold=True,
+           right_italic=False, space_after=0):
+    p = P(stylename=styles.para(align="left", space_after=space_after,
+                                line_height=1.12, right_tab_cm=_SERIF_CONTENT_CM))
+    fill_left(p)
+    if right_text:
+        p.addElement(Tab())
+        _srun(p, styles, right_text, right_size, right_color,
+              bold=right_bold, italic=right_italic)
+    doc.text.addElement(p)
+
+
+def _sbullet(doc: OpenDocumentText, styles: "_Styles", text: str):
+    p = P(stylename=styles.para(
+        align="justify", space_after=1, line_height=1.18,
+        left_indent=_SERIF_BULLET_TEXT_PT,
+        first_line_indent=-(_SERIF_BULLET_TEXT_PT - _SERIF_BULLET_POS_PT)))
+    _srun(p, styles, "•", styles.base - 0.5, styles.palette["body"])
+    p.addElement(Tab())
+    _srun(p, styles, text, styles.base - 0.5, styles.palette["body"])
+    doc.text.addElement(p)
+
+
+def _embed_fonts_odt(odt_bytes: bytes) -> bytes:
+    """Embed CMU Serif + Font Awesome into the .odt (ODF font embedding) so the
+    LaTeX look renders without the fonts installed."""
+    zin = zipfile.ZipFile(io.BytesIO(odt_bytes))
+    items: dict[str, bytes] = {n: zin.read(n) for n in zin.namelist()}
+
+    # 1) Font binaries (ODF stores them unobfuscated).
+    for fn, *_ in _EMBED_ODT_FONTS:
+        items[f"Fonts/{fn}"] = open(os.path.join(_FONTS_DIR, fn), "rb").read()
+
+    # 2) manifest entries.
+    man = items["META-INF/manifest.xml"].decode()
+    seen = set()
+    entries = ""
+    for fn, *_ in _EMBED_ODT_FONTS:
+        if fn in seen:
+            continue
+        seen.add(fn)
+        entries += (f'<manifest:file-entry manifest:full-path="Fonts/{fn}" '
+                    f'manifest:media-type="application/x-font-ttf"/>')
+    man = man.replace("</manifest:manifest>", entries + "</manifest:manifest>")
+    items["META-INF/manifest.xml"] = man.encode()
+
+    # 3) font-face-decls with embedded src, grouped per family.
+    by_family: dict[str, list] = {}
+    generic: dict[str, str] = {}
+    for fn, fam, style, weight, gen in _EMBED_ODT_FONTS:
+        by_family.setdefault(fam, []).append((fn, style, weight))
+        generic[fam] = gen
+    faces = ""
+    for fam, srcs in by_family.items():
+        gen_attr = f' style:font-family-generic="{generic[fam]}"' if generic[fam] != "system" else ""
+        faces += (f'<style:font-face style:name="{fam}" svg:font-family="{fam}"'
+                  f'{gen_attr} style:font-pitch="variable"><svg:font-face-src>')
+        for fn, style, weight in srcs:
+            faces += (f'<svg:font-face-uri xlink:href="Fonts/{fn}" xlink:type="simple" '
+                      f'loext:font-style="{style}" loext:font-weight="{weight}">'
+                      f'<svg:font-face-format svg:string="truetype"/></svg:font-face-uri>')
+        faces += "</svg:font-face-src></style:font-face>"
+    decls = f"<office:font-face-decls>{faces}</office:font-face-decls>"
+
+    # Inject the embedded font-face-decls into BOTH content.xml and styles.xml —
+    # LibreOffice reads embedded fonts from the styles part.
+    for part, root, anchor in (
+        ("content.xml", "office:document-content", "<office:automatic-styles"),
+        ("styles.xml", "office:document-styles", "<office:styles"),
+    ):
+        if part not in items:
+            continue
+        x = items[part].decode()
+        if "xmlns:loext" not in x:
+            x = x.replace(f"<{root} ", f'<{root} xmlns:loext="{_LOEXT_NS}" ', 1)
+        if "<office:font-face-decls>" in x:
+            # lambda replacement avoids re.sub interpreting backslashes/\g in decls
+            x = re.sub(r"<office:font-face-decls>.*?</office:font-face-decls>",
+                       lambda _m: decls, x, count=1, flags=re.S)
+        elif "<office:font-face-decls/>" in x:
+            x = x.replace("<office:font-face-decls/>", decls, 1)
+        elif anchor in x:
+            x = x.replace(anchor, decls + anchor, 1)
+        items[part] = x.encode()
+
+    # 4) settings.xml with EmbedFonts=true — REQUIRED for LibreOffice to actually
+    #    use the embedded fonts on open (odfpy writes no settings.xml).
+    items["settings.xml"] = (
+        '<?xml version="1.0" encoding="UTF-8"?>'
+        '<office:document-settings '
+        'xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" '
+        'xmlns:config="urn:oasis:names:tc:opendocument:xmlns:config:1.0">'
+        '<office:settings><config:config-item-set '
+        'config:name="ooo:configuration-settings">'
+        '<config:config-item config:name="EmbedFonts" config:type="boolean">true'
+        '</config:config-item></config:config-item-set></office:settings>'
+        '</office:document-settings>'
+    ).encode()
+    man = items["META-INF/manifest.xml"].decode()
+    if "settings.xml" not in man:
+        man = man.replace("</manifest:manifest>",
+            '<manifest:file-entry manifest:full-path="settings.xml" '
+            'manifest:media-type="text/xml"/></manifest:manifest>')
+        items["META-INF/manifest.xml"] = man.encode()
+
+    # 5) Re-zip — mimetype MUST be first and stored uncompressed.
+    out = io.BytesIO()
+    with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as zout:
+        if "mimetype" in items:
+            zi = zipfile.ZipInfo("mimetype")
+            zi.compress_type = zipfile.ZIP_STORED
+            zout.writestr(zi, items.pop("mimetype"))
+        for n, d in items.items():
+            zout.writestr(n, d)
+    return out.getvalue()
+
+
+def _build_resume_doc_serif(resume: dict, base: float) -> OpenDocumentText:
+    """LaTeX-style ODT (Computer Modern + Font Awesome) matching the PDF."""
+    palette = PALETTES_HEX["latex_serif"]
+    body, muted, accent = palette["body"], palette["muted"], palette["accent"]
+    doc = _make_doc(side_cm=0.4 * 2.54, vert_cm=0.36 * 2.54)
+    styles = _Styles(doc, palette, base)
+    pi = resume.get("personal_info", {}) or {}
+
+    # ── Header: small-caps name, optional title, icon contact line ──────────
+    name = _safe(pi.get("full_name")) or "Your Name"
+    p = P(stylename=styles.para(align="center", space_after=1, line_height=1.0))
+    _srun(p, styles, name, base + 12, palette["name"], bold=True, small_caps=True)
+    doc.text.addElement(p)
+
+    role = _safe(pi.get("professional_title"))
+    if role:
+        p = P(stylename=styles.para(align="center", space_after=2, line_height=1.2))
+        _srun(p, styles, role, base + 0.5, muted, italic=True)
+        doc.text.addElement(p)
+
+    contact = [(k, _safe(pi.get(k))) for k in
+               ("phone", "email", "location", "linkedin", "github", "website", "portfolio")]
+    contact = [(k, v) for k, v in contact if v]
+    if contact:
+        cp = P(stylename=styles.para(align="center", space_after=2, line_height=1.3))
+        csize = base - 0.5
+        first = True
+        for key, v in contact:
+            if not first:
+                cp.addElement(S(c=4))  # gap between contact items
+            first = False
+            kind = {"website": "web", "portfolio": "web"}.get(key, key)
+            _sicon(cp, styles, kind, body, csize)
+            if key in ("phone", "location"):
+                _srun(cp, styles, v, csize, body)
+            elif key == "email":
+                _slink(cp, styles, v, _normalize_url(v), accent, csize)
+            else:
+                disp = v.replace("https://", "").replace("http://", "").rstrip("/")
+                _slink(cp, styles, disp, _normalize_url(v), accent, csize)
+        doc.text.addElement(cp)
+
+    # ── Summary ─────────────────────────────────────────────────────────────
+    summary = _safe(resume.get("professional_summary", ""))
+    if summary:
+        _ssection(doc, styles, "Summary")
+        p = P(stylename=styles.para(align="justify", space_after=1, line_height=1.2))
+        _srun(p, styles, summary, base, body)
+        doc.text.addElement(p)
+
+    # ── Core Competencies ───────────────────────────────────────────────────
+    competencies = [_safe(c) for c in (resume.get("core_competencies") or []) if _safe(c)]
+    if competencies:
+        _ssection(doc, styles, "Core Competencies")
+        cols = 3
+        rows = (len(competencies) + cols - 1) // cols
+        tname = f"scomp_{styles._next()}"
+        col = Style(name=f"{tname}_c", family="table-column")
+        col.addElement(TableColumnProperties(columnwidth="6.5cm"))
+        cell = Style(name=f"{tname}_cell", family="table-cell")
+        cell.addElement(TableCellProperties(padding="0pt", bordertop="none",
+                        borderbottom="none", borderleft="none", borderright="none"))
+        ts = Style(name=tname, family="table")
+        ts.addElement(TableProperties(width=f"{_SERIF_CONTENT_CM}cm", align="left"))
+        for s in (col, cell, ts):
+            doc.automaticstyles.addElement(s)
+        tbl = Table(stylename=tname)
+        for _ in range(cols):
+            tbl.addElement(TableColumn(stylename=col))
+        for r in range(rows):
+            tr = TableRow()
+            for c in range(cols):
+                idx = c * rows + r
+                tc = TableCell(stylename=cell)
+                if idx < len(competencies):
+                    pp = P(stylename=styles.para(space_after=1.5, line_height=1.2))
+                    _srun(pp, styles, f"•  {competencies[idx]}", base - 0.5, body)
+                    tc.addElement(pp)
+                else:
+                    tc.addElement(P())
+                tr.addElement(tc)
+            tbl.addElement(tr)
+        doc.text.addElement(tbl)
+
+    # ── Professional Experience ─────────────────────────────────────────────
+    experience = resume.get("experience") or []
+    if experience:
+        _ssection(doc, styles, "Professional Experience")
+        for exp in experience:
+            title_str = _safe(exp.get("title"))
+            company_str = _safe(exp.get("company"))
+            loc_str = _safe(exp.get("location"))
+            start = _safe(exp.get("start_date"))
+            end = _safe(exp.get("end_date")) or ("Present" if exp.get("current") else "Present")
+            emp_type = _safe(exp.get("employment_type", ""))
+            head_left = " – ".join([x for x in (company_str, title_str) if x]) or title_str
+            if emp_type and emp_type.lower() not in ("full-time", "fulltime", ""):
+                head_left = f"{head_left} ({emp_type})"
+            _shrow(doc, styles,
+                   lambda p, t=head_left: _srun(p, styles, t, base, body, bold=True),
+                   _serif_dates(start, end), base, body, right_bold=True)
+
+            techs = [_safe(t) for t in (exp.get("technologies") or []) if _safe(t)]
+            team = _safe(exp.get("team_size"))
+            if techs or team or loc_str:
+                def _tech(p, _techs=techs, _team=team):
+                    if _techs:
+                        _srun(p, styles, "Technologies", base - 0.5, body, bold=True, italic=True)
+                        _srun(p, styles, f": {', '.join(_techs)}", base - 0.5, body, italic=True)
+                        if _team:
+                            _srun(p, styles, f"  ·  Team: {_team}", base - 0.5, body, italic=True)
+                    elif _team:
+                        _srun(p, styles, f"Team: {_team}", base - 0.5, body, italic=True)
+                _shrow(doc, styles, _tech, loc_str, base - 0.5, body,
+                       right_bold=False, right_italic=True)
+
+            bullets = list(exp.get("responsibilities") or []) + list(exp.get("achievements") or [])
+            seen: set[str] = set()
+            for b in bullets:
+                bs = _safe(b)
+                if bs and bs.lower() not in seen:
+                    seen.add(bs.lower())
+                    _sbullet(doc, styles, bs)
+            _serif_gap(doc, styles)
+
+    # ── Projects ────────────────────────────────────────────────────────────
+    projects = resume.get("projects") or []
+    if projects:
+        _ssection(doc, styles, "Projects")
+        for proj in projects:
+            p_name = _safe(proj.get("name"))
+            url_raw = _safe(proj.get("url") or proj.get("github") or "")
+            url = _normalize_url(url_raw) if url_raw else None
+            tech = ", ".join(_safe(t) for t in (proj.get("technologies") or []) if _safe(t))
+            descriptor = next((d for d in (_safe(proj.get("role")), _safe(proj.get("type")))
+                               if d and d.lower() not in p_name.lower()), "")
+            dates_str = _serif_dates(_safe(proj.get("start_date")), _safe(proj.get("end_date")))
+
+            def _phead(p, _n=p_name, _u=url, _d=descriptor, _t=tech):
+                if _u:
+                    _slink(p, styles, _n, _u, body, base, bold=True, underline=False)
+                else:
+                    _srun(p, styles, _n, base, body, bold=True)
+                if _d:
+                    _srun(p, styles, f" ({_d})", base, body, bold=True)
+                if _t:
+                    _srun(p, styles, " | ", base, body)
+                    _srun(p, styles, _t, base - 0.5, body, italic=True)
+            _shrow(doc, styles, _phead, dates_str, base, body, right_bold=True)
+            desc = _safe(proj.get("description"))
+            if desc:
+                _sbullet(doc, styles, desc)
+            for h in (proj.get("highlights") or []):
+                if _safe(h):
+                    _sbullet(doc, styles, _safe(h))
+            _serif_gap(doc, styles)
+
+    # ── Education ───────────────────────────────────────────────────────────
+    education = resume.get("education") or []
+    if education:
+        _ssection(doc, styles, "Education")
+        for edu in education:
+            deg = _safe(edu.get("degree"))
+            field = _safe(edu.get("field_of_study"))
+            inst = _safe(edu.get("institution"))
+            loc = _safe(edu.get("location"))
+            start = _safe(edu.get("start_date"))
+            end = _safe(edu.get("end_date")) or _safe(edu.get("graduation_year"))
+            deg_line = deg
+            if field and field.lower() not in deg.lower():
+                deg_line = f"{deg} in {field}" if deg else field
+            _shrow(doc, styles,
+                   lambda p, t=inst: _srun(p, styles, t, base, body, bold=True),
+                   _serif_dates(start, end), base, body, right_bold=True)
+            if deg_line or loc:
+                _shrow(doc, styles,
+                       lambda p, t=deg_line: _srun(p, styles, t, base - 0.5, body, italic=True),
+                       loc, base - 0.5, body, right_bold=False, right_italic=True)
+            extras = []
+            if _safe(edu.get("gpa")):
+                extras.append(f"GPA: {_safe(edu.get('gpa'))}")
+            if _safe(edu.get("honors")):
+                extras.append(_safe(edu.get("honors")))
+            cw = ", ".join(_safe(c) for c in (edu.get("relevant_coursework") or []) if _safe(c))
+            if cw:
+                extras.append(f"Coursework: {cw}")
+            if extras:
+                p = P(stylename=styles.para(space_after=0, line_height=1.2))
+                _srun(p, styles, "  ·  ".join(extras), base - 1.5, muted, italic=True)
+                doc.text.addElement(p)
+            _serif_gap(doc, styles)
+
+    # ── Technical Skills ────────────────────────────────────────────────────
+    skills = resume.get("technical_skills") or {}
+    skill_cats = [
+        ("Languages", skills.get("programming_languages")),
+        ("Frameworks & Libraries", skills.get("frameworks_and_libraries")),
+        ("Databases", skills.get("databases")),
+        ("Cloud & Infrastructure", skills.get("cloud_and_infrastructure")),
+        ("DevOps & Tooling", skills.get("devops_and_tools") or skills.get("tools_and_practices")),
+        ("Testing", skills.get("testing")),
+        ("Methodologies", skills.get("methodologies")),
+        ("Soft Skills", skills.get("soft_skills")),
+    ]
+    skill_rows = [(k, ", ".join(_safe(x) for x in v if _safe(x))) for k, v in skill_cats if v]
+    if skill_rows:
+        _ssection(doc, styles, "Technical Skills")
+        for label, vals in skill_rows:
+            if not vals:
+                continue
+            p = P(stylename=styles.para(space_after=1.5, line_height=1.2))
+            _srun(p, styles, label, base - 0.5, body, bold=True)
+            _srun(p, styles, f" : {vals}", base - 0.5, body)
+            doc.text.addElement(p)
+
+    _serif_tail_sections(doc, styles, resume)
+    return doc
+
+
+def _serif_tail_sections(doc: OpenDocumentText, styles: "_Styles", resume: dict):
+    """Open Source · Certifications · Publications · Patents · Awards · Volunteer
+    · Languages · Interests · References — serif-styled to match the PDF."""
+    base = styles.base
+    body, muted = styles.palette["body"], styles.palette["muted"]
+
+    oss = resume.get("open_source_contributions") or []
+    if oss:
+        _ssection(doc, styles, "Open Source")
+        for o in oss:
+            proj = _safe(o.get("project")); role = _safe(o.get("role"))
+            url_raw = _safe(o.get("url", "")); url = _normalize_url(url_raw) if url_raw else None
+            p = P(stylename=styles.para(space_after=0, line_height=1.18))
+            if url:
+                _slink(p, styles, proj, url, body, base, bold=True, underline=False)
+            else:
+                _srun(p, styles, proj, base, body, bold=True)
+            if role:
+                _srun(p, styles, f" – {role}", base, body, italic=True)
+            doc.text.addElement(p)
+            o_desc = _safe(o.get("description", "")) or _safe(o.get("contribution", ""))
+            if o_desc:
+                pd = P(stylename=styles.para(space_after=0, line_height=1.2))
+                _srun(pd, styles, o_desc, base - 1.5, muted, italic=True)
+                doc.text.addElement(pd)
+            for c in (o.get("contributions") or []):
+                if _safe(c):
+                    _sbullet(doc, styles, _safe(c))
+            _serif_gap(doc, styles)
+
+    certs = resume.get("certifications") or []
+    if certs:
+        _ssection(doc, styles, "Certifications")
+        for c in certs:
+            url_raw = _safe(c.get("url", "")); url = _normalize_url(url_raw) if url_raw else None
+            p = P(stylename=styles.para(space_after=1, line_height=1.2))
+            if url:
+                _slink(p, styles, _safe(c.get("name")), url, body, base - 0.5, bold=True, underline=False)
+            else:
+                _srun(p, styles, _safe(c.get("name")), base - 0.5, body, bold=True)
+            if _safe(c.get("issuer")):
+                _srun(p, styles, f" – {_safe(c.get('issuer'))}", base - 0.5, body, italic=True)
+            dp = []
+            if _safe(c.get("date")) or _safe(c.get("year")):
+                dp.append(f"issued {_safe(c.get('date')) or _safe(c.get('year'))}")
+            if _safe(c.get("expiry")):
+                dp.append(f"expires {_safe(c.get('expiry'))}")
+            if dp:
+                _srun(p, styles, f"  ({', '.join(dp)})", base - 0.5, muted)
+            doc.text.addElement(p)
+            _serif_gap(doc, styles)
+
+    pubs = resume.get("publications") or []
+    if pubs:
+        _ssection(doc, styles, "Publications")
+        for pub in pubs:
+            url_raw = _safe(pub.get("url", "")); url = _normalize_url(url_raw) if url_raw else None
+            p = P(stylename=styles.para(space_after=1, line_height=1.2))
+            if url:
+                _slink(p, styles, _safe(pub.get("title")), url, body, base - 0.5, bold=True, underline=False)
+            else:
+                _srun(p, styles, _safe(pub.get("title")), base - 0.5, body, bold=True)
+            if _safe(pub.get("venue")):
+                _srun(p, styles, f" – {_safe(pub.get('venue'))}", base - 0.5, body, italic=True)
+            if _safe(pub.get("date")):
+                _srun(p, styles, f"  ({_safe(pub.get('date'))})", base - 0.5, muted)
+            doc.text.addElement(p)
+            _serif_gap(doc, styles)
+
+    patents = resume.get("patents") or []
+    if patents:
+        _ssection(doc, styles, "Patents")
+        for pt in patents:
+            p = P(stylename=styles.para(space_after=1, line_height=1.2))
+            _srun(p, styles, _safe(pt.get("title")), base - 0.5, body, bold=True)
+            if _safe(pt.get("patent_number")):
+                _srun(p, styles, f" – {_safe(pt.get('patent_number'))}", base - 0.5, body)
+            if _safe(pt.get("date")):
+                _srun(p, styles, f"  ({_safe(pt.get('date'))})", base - 0.5, muted)
+            doc.text.addElement(p)
+            _serif_gap(doc, styles)
+
+    awards = resume.get("awards_and_honors") or []
+    if awards:
+        _ssection(doc, styles, "Awards & Honors")
+        for a in awards:
+            if isinstance(a, dict):
+                nm = _safe(a.get("name") or a.get("title"))
+                issuer = _safe(a.get("issuer")); yr = _safe(a.get("year") or a.get("date"))
+                v = nm + (f" – {issuer}" if issuer else "") + (f" ({yr})" if yr else "")
+            else:
+                v = _safe(a)
+            if v:
+                _sbullet(doc, styles, v)
+
+    vols = resume.get("volunteer_experience") or []
+    if vols:
+        _ssection(doc, styles, "Volunteer Experience")
+        for v in vols:
+            org = _safe(v.get("organization")); role = _safe(v.get("role"))
+            head_left = " – ".join([x for x in (org, role) if x])
+            _shrow(doc, styles,
+                   lambda p, t=head_left: _srun(p, styles, t, base, body, bold=True),
+                   _serif_dates(_safe(v.get("start_date")), _safe(v.get("end_date"))),
+                   base, body, right_bold=True)
+            if _safe(v.get("description")):
+                pd = P(stylename=styles.para(space_after=0, line_height=1.2))
+                _srun(pd, styles, _safe(v.get("description")), base - 1.5, muted, italic=True)
+                doc.text.addElement(pd)
+            _serif_gap(doc, styles)
+
+    langs = resume.get("languages") or []
+    if langs:
+        _ssection(doc, styles, "Languages")
+        p = P(stylename=styles.para(space_after=1.5, line_height=1.2))
+        for i, l in enumerate(langs):
+            lang = _safe(l.get("language")); prof = _safe(l.get("proficiency"))
+            if not lang:
+                continue
+            if i > 0:
+                _srun(p, styles, "  ·  ", base - 0.5, body)
+            _srun(p, styles, lang, base - 0.5, body, bold=True)
+            if prof:
+                _srun(p, styles, f" ({prof})", base - 0.5, body)
+        doc.text.addElement(p)
+
+    interests = [_safe(i) for i in (resume.get("interests") or []) if _safe(i)]
+    if interests:
+        _ssection(doc, styles, "Interests")
+        p = P(stylename=styles.para(space_after=1.5, line_height=1.2))
+        _srun(p, styles, ", ".join(interests), base - 0.5, body)
+        doc.text.addElement(p)
+
+    references = resume.get("references")
+    if references:
+        _ssection(doc, styles, "References")
+        if isinstance(references, str):
+            p = P(stylename=styles.para(space_after=1.5, line_height=1.2))
+            _srun(p, styles, _safe(references), base - 0.5, body)
+            doc.text.addElement(p)
+        elif isinstance(references, list):
+            for ref in references:
+                if _safe(ref):
+                    _sbullet(doc, styles, _safe(ref))
 
 
 def _build_resume_doc(resume: dict, template: TemplateName, base: float) -> OpenDocumentText:
@@ -817,6 +1468,16 @@ def generate_odt_resume(
     from app.documents._normalize import normalize_resume, resolve_base_font_size
     resume = normalize_resume(resume)
     base = resolve_base_font_size(font_size)
+
+    if template == "latex_serif":
+        doc = _build_resume_doc_serif(resume, base)
+        buf = io.BytesIO()
+        doc.write(buf)
+        try:
+            return _embed_fonts_odt(buf.getvalue())
+        except Exception:
+            return buf.getvalue()  # font-name-only fallback if embedding fails
+
     doc = _build_resume_doc(resume, template, base)
     buf = io.BytesIO()
     doc.write(buf)

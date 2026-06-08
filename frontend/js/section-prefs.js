@@ -201,8 +201,8 @@ async function saveSectionPrefs() {
       body: JSON.stringify(_secPrefsState),
     });
     if (!r.ok) throw new Error(await r.text());
+    // Keep the Settings panel open after saving — it only closes via Cancel or ✕.
     showToast('✓ Section preferences saved');
-    closeSettingsModal();
   } catch (e) {
     showToast('⚠ ' + (e.message || 'Save failed'));
   }

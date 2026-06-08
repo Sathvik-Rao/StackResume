@@ -88,6 +88,8 @@
 
 <!-- Sidebar -->
 <div id="sb">
+  <!-- Drag handle on the right edge to resize the sidebar (desktop only). -->
+  <div id="sb-resizer" class="sb-resizer" title="Drag to resize"></div>
   <div class="sb-head">
     <div class="logo">
       <img src="/assets/icons/logo.svg" alt="StackResume" class="logo-mark-img">
@@ -629,6 +631,10 @@
               <div class="tmpl-icon">🌙</div><div class="tmpl-name">Dark Theme</div>
               <div class="tmpl-desc">Navy bg, light text</div>
             </div>
+            <div class="tmpl-card" data-tmpl="latex_serif" onclick="selTmpl(this)">
+              <div class="tmpl-icon">📄</div><div class="tmpl-name">LaTeX</div>
+              <div class="tmpl-desc">Serif, academic</div>
+            </div>
           </div>
         </div>
         <div class="fg"><div class="fl">Font Size</div>
@@ -825,6 +831,7 @@
 <script src="/assets/js/state.js"></script>
 <script src="/assets/js/init.js"></script>
 <script src="/assets/js/mobile-sidebar.js"></script>
+<script src="/assets/js/sidebar-resize.js"></script>
 <script src="/assets/js/sessions.js"></script>
 <script src="/assets/js/toolbar.js"></script>
 <script src="/assets/js/send.js"></script>

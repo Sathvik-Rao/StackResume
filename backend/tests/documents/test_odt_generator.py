@@ -41,6 +41,32 @@ def test_odt_minimal(minimal_resume):
     assert "Grace Hopper" in _extract_text(data)
 
 
+@pytest.mark.parametrize("font_size", ["small", "normal", "large"])
+def test_odt_latex_serif_embeds_font_and_icons(sample_resume, font_size):
+    """latex_serif ODT mirrors the PDF: Computer Modern embedded (with the
+    EmbedFonts flag LibreOffice needs) and contact icons inlined as PNGs (an
+    embedded icon *font* won't render in ODT)."""
+    from app.documents.odt_generator import generate_odt_resume
+
+    data = generate_odt_resume(sample_resume, template="latex_serif", font_size=font_size)
+    assert data[:2] == b"PK"
+    assert "Ada Lovelace" in _extract_text(data)
+    z = zipfile.ZipFile(io.BytesIO(data))
+    names = z.namelist()
+    assert any(n.startswith("Fonts/CMUSerif") for n in names), "CMU not embedded"
+    assert any(n.startswith("Pictures/") for n in names), "icons not inlined as images"
+    assert "EmbedFonts" in z.read("settings.xml").decode()
+    assert "font-face-uri" in z.read("styles.xml").decode()
+
+
+def test_odt_latex_serif_minimal(minimal_resume):
+    from app.documents.odt_generator import generate_odt_resume
+
+    data = generate_odt_resume(minimal_resume, template="latex_serif")
+    assert data[:2] == b"PK"
+    assert "Grace Hopper" in _extract_text(data)
+
+
 def test_odt_cover_letter(sample_resume):
     from app.documents.odt_generator import generate_odt_cover_letter
 
