@@ -121,9 +121,6 @@
       </button>
     </div>
   </div>
-  <button id="sb-expand" class="sb-expand" onclick="toggleSidebar()" title="Expand sidebar" style="display:none">
-    <svg class="ic sm"><use href="#ic-list"/></svg>
-  </button>
   <div class="ss">
     <div class="sl" id="sl-fav" style="display:none">Favorites</div>
     <div id="sessions-list-fav"></div>
@@ -150,6 +147,11 @@
 <div id="main">
   <div id="tb">
     <button class="mob-menu-btn" onclick="openMobileSidebar()" title="Open menu">
+      <svg class="ic"><use href="#ic-list"/></svg>
+    </button>
+    <!-- Desktop: expand a collapsed sidebar. Lives in the toolbar (not inside #sb,
+         which clips to width:0 when collapsed) so it stays clickable. -->
+    <button id="sb-expand" class="sb-expand" onclick="toggleSidebar()" title="Expand sidebar" style="display:none">
       <svg class="ic"><use href="#ic-list"/></svg>
     </button>
     <div class="tb-title" id="tb-title">StackResume</div>
