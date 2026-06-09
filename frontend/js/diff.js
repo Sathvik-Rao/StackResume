@@ -1,14 +1,58 @@
 // ── Resume Diff ───────────────────────────────────────────────────────────────
+// The resume currently being compared against a master (master-mode only), so
+// the picker's onchange can re-render without re-resolving the message.
+let _diffMasterTargetResume=null;
+
+function _hideDiffMasterRow(){
+  const row=document.getElementById('diff-master-row');
+  if(row)row.style.display='none';
+}
+
 function openDiff(msgId,sessionId){
   const versions=_resumeVersions[sessionId]||[];
   const myIdx=versions.findIndex(v=>v.id===msgId);
   if(myIdx<1)return;
   const prev=versions[myIdx-1].resume;
   const curr=versions[myIdx].resume;
+  _diffMasterTargetResume=null;
+  _hideDiffMasterRow();
   document.getElementById('diff-ver').textContent=`(v${myIdx} → v${myIdx+1})`;
   document.getElementById('diff-body').innerHTML=_buildDiffHtml(prev,curr);
   document.getElementById('diff-modal').classList.add('open');
 }
+
+// Compare any resume version against a saved master resume (the reference).
+// Direction is master → this version, so tailoring/edits read as additions.
+function openDiffVsMaster(msgId){
+  const curr=window['__r_'+msgId];
+  if(!curr){showToast('Resume not loaded yet');return;}
+  if(typeof _masterResumes==='undefined'||!_masterResumes.length){
+    showToast('No master resume saved to compare against');return;
+  }
+  _diffMasterTargetResume=curr;
+  const sel=document.getElementById('diff-master-pick');
+  if(sel){
+    sel.innerHTML=_masterResumes.map(it=>
+      `<option value="${it.id}"${it.is_default?' selected':''}>${esc(it.name||'Untitled')}${it.is_default?' · default':''}</option>`
+    ).join('');
+  }
+  const row=document.getElementById('diff-master-row');
+  if(row)row.style.display='flex';
+  _renderMasterDiff();
+  document.getElementById('diff-modal').classList.add('open');
+}
+
+function _renderMasterDiff(){
+  if(!_diffMasterTargetResume)return;
+  const sel=document.getElementById('diff-master-pick');
+  const mid=sel?sel.value:null;
+  const m=(_masterResumes.find(x=>x.id===mid))||_defaultMaster();
+  const body=document.getElementById('diff-body');
+  if(!m){body.innerHTML='<div style="color:var(--text3);font-size:13px;text-align:center;padding:32px 0">No master resume to compare against.</div>';return;}
+  document.getElementById('diff-ver').textContent=`(Master “${m.name}” → this version)`;
+  body.innerHTML=_buildDiffHtml(m.resume,_diffMasterTargetResume);
+}
+
 function closeDiff(){document.getElementById('diff-modal').classList.remove('open');}
 document.getElementById('diff-modal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeDiff();});
 

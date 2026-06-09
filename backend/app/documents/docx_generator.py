@@ -434,7 +434,7 @@ _EMBED_FONTS = [
 _FA_ICONS = {
     "phone":    (_FA_SOLID, ""),
     "email":    (_FA_SOLID, ""),
-    "location": (_FA_SOLID, ""),
+    "location": (_FA_SOLID, ""),
     "linkedin": (_FA_BRANDS, ""),
     "github":   (_FA_BRANDS, ""),
     "web":      (_FA_SOLID, ""),

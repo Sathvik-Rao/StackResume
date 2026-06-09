@@ -40,6 +40,14 @@ body.sb-resizing{cursor:col-resize;user-select:none}
 .logo-sub{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-top:-2px}
 #new-btn{width:100%;padding:9px 13px;background:var(--abg);border:1px solid var(--ab);border-radius:8px;color:var(--accent2);font-family:var(--font);font-size:13.5px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .15s}
 #new-btn:hover{background:rgba(124,131,255,.22)}
+.nfm-split{display:flex;width:100%;margin-top:6px}
+#new-from-master-btn{flex:1;min-width:0;padding:7px 13px;background:transparent;border:1px solid var(--bdr);border-radius:8px 0 0 8px;border-right:none;color:var(--text2);font-family:var(--font);font-size:12.5px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .15s}
+#new-from-master-btn:hover{background:var(--bg3);border-color:var(--amber);color:var(--amber)}
+#new-from-master-btn .ic{color:var(--amber)}
+.nfm-caret{flex-shrink:0;width:34px;display:flex;align-items:center;justify-content:center;background:transparent;border:1px solid var(--bdr);border-radius:0 8px 8px 0;color:var(--text2);cursor:pointer;transition:all .15s}
+.nfm-caret:hover,.nfm-caret.on{background:var(--bg3);border-color:var(--amber);color:var(--amber)}
+.nfm-caret .ic{color:var(--amber);transition:transform .15s}
+.nfm-caret.on .ic{transform:rotate(180deg)}
 
 .ss{flex:1;overflow-y:auto;padding:6px 8px}
 .ss::-webkit-scrollbar{width:3px}.ss::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}

@@ -150,9 +150,15 @@ async def send_message(
         "section_preferences": section_prefs,
     }
 
+    # Provenance for the reply's "sources" note — what fed this generation.
+    run_meta = {
+        "used_memory": bool(memory_context),
+        "from_master_name": (req.from_master_name or "").strip() or None,
+    }
+
     background_tasks.add_task(
         _run_pipeline_background,
-        asst_msg.id, session_id, initial_state,
+        asst_msg.id, session_id, initial_state, run_meta,
     )
 
     return {"user_message_id": user_msg.id, "assistant_message_id": asst_msg.id, "status": "processing"}

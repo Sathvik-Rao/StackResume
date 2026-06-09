@@ -66,6 +66,20 @@ class TestBuildSummary:
         assert "cover letter" in out
         assert "3 outreach email templates" in out
 
+    def test_notes_master_and_memory_sources(self):
+        """The reply records which inputs fed the generation, for later reference."""
+        from app.api._pipeline import _build_summary
+        resume = {"metadata": {"overall_score": 90}, "personal_info": {"full_name": "Ada"}}
+        out = _build_summary(resume, used_memory=True, from_master_name="Backend Master")
+        assert "Backend Master" in out
+        assert "profile memory" in out.lower()
+
+    def test_omits_sources_line_when_nothing_used(self):
+        from app.api._pipeline import _build_summary
+        resume = {"metadata": {"overall_score": 90}, "personal_info": {"full_name": "Ada"}}
+        out = _build_summary(resume)  # no master, memory off
+        assert "Generated using" not in out
+
 
 # ── _build_no_resume_error ────────────────────────────────────────────────────
 

@@ -79,7 +79,8 @@ async def _save_progress(msg_id: str, events: list) -> None:
         pass
 
 
-async def _run_pipeline_background(msg_id: str, session_id: str, initial_state: dict):
+async def _run_pipeline_background(msg_id: str, session_id: str, initial_state: dict,
+                                   run_meta: dict | None = None):
     # Imported lazily so the test harness can stub the graph without forcing a
     # heavy import chain at app startup.
     from app.agents.graph import RESUME_GRAPH
@@ -159,7 +160,12 @@ async def _run_pipeline_background(msg_id: str, session_id: str, initial_state: 
             )
         else:
             status_str = "complete"
-            summary = _build_summary(resume, has_cover=bool(cover_letter), n_emails=len(outreach_emails or []))
+            meta_info = run_meta or {}
+            summary = _build_summary(
+                resume, has_cover=bool(cover_letter), n_emails=len(outreach_emails or []),
+                used_memory=bool(meta_info.get("used_memory")),
+                from_master_name=meta_info.get("from_master_name"),
+            )
 
         async with AsyncSessionLocal() as db:
             result = await db.execute(select(Message).where(Message.id == msg_id))
@@ -301,7 +307,8 @@ def _safe_score(v) -> float:
         return 0.0
 
 
-def _build_summary(resume: dict | None, has_cover: bool = False, n_emails: int = 0) -> str:
+def _build_summary(resume: dict | None, has_cover: bool = False, n_emails: int = 0,
+                   used_memory: bool = False, from_master_name: str | None = None) -> str:
     if not resume:
         return "I encountered an issue generating your resume. Please try again."
     meta = resume.get("metadata", {})
@@ -336,6 +343,16 @@ def _build_summary(resume: dict | None, has_cover: bool = False, n_emails: int =
         lines.append("\n**Suggestions for further improvement:**")
         for s in improvements[:3]:
             lines.append(f"• {s}")
+
+    # Provenance note — records what fed this generation so it's clear on a later
+    # read whether the master resume and/or profile memory were applied.
+    sources = []
+    if from_master_name:
+        sources.append(f'master resume **{from_master_name}**')
+    if used_memory:
+        sources.append("your **profile memory**")
+    if sources:
+        lines.append(f"\n📎 Generated using {' and '.join(sources)}.")
 
     lines.append("")
     lines.append("Tip: ask me to refine sections, raise seniority, target a company, add certifications, or paste a JD to tailor.")

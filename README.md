@@ -229,13 +229,17 @@ Click **🎯 Tailor to JD**, paste any JD, and drag the intensity slider (0–10
 
 ### Persistent profile (My Profile)
 
-Click **🧠 My Profile** to store your identity, work history, projects, education, and target roles across five tabs. Profile data is automatically injected into every pipeline run.
+Click **🧠 My Profile** to store your identity, work history, projects, education, and target roles across five tabs. Profile data is injected into every pipeline run while the **🧠 Use memory** toggle is on — a global preference that persists across chats, sessions, and reloads (stored server-side). Each generated reply also notes whether your master resume and/or profile memory were used, so it's clear later what fed the result.
 
 **Import / Export** — download your profile as a portable JSON file and load it back on any install. Invalid files are rejected with a clear error.
 
 ### Master resumes
 
-Save any generated resume as a named **master resume** and set one as the default. The sidebar attach button starts a new chat with a specific master pre-loaded — great for keeping a polished base and forking variants per role.
+Save any generated resume as a named **master resume** and mark one as the default — great for keeping a polished base and forking variants per role. Three ways to put them to work:
+
+- **⭐ Use Master** (input bar) attaches a master as the starting point for your next message, so you can tailor it to a JD or refine it through the pipeline.
+- **⭐ New from Master** (sidebar) opens a fresh chat with the master loaded **verbatim — no AI changes**. Click the main button for your default, or the caret to pick any saved master. Ideal for forking a polished base, or just attaching the application tracker to an untouched copy.
+- **Compare to Master** on any resume version diffs it against a chosen master, so you can see exactly what tailoring changed relative to your base.
 
 ### Manual editor + Re-score
 

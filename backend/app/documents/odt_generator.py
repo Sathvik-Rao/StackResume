@@ -404,7 +404,7 @@ _FA_BRANDS = "SR FA Brands"
 _FA_ICONS = {
     "phone":    (_FA_SOLID, ""),   # faPhone
     "email":    (_FA_SOLID, ""),   # faEnvelope
-    "location": (_FA_SOLID, ""),   # faMapMarker
+    "location": (_FA_SOLID, ""),   # faMapMarker
     "linkedin": (_FA_BRANDS, ""),  # faLinkedin
     "github":   (_FA_BRANDS, ""),  # faGithub
     "web":      (_FA_SOLID, ""),   # faGlobe

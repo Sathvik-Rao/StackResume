@@ -106,6 +106,9 @@ class AppSettings(Base):
     # Last-used JD tailoring slider (0–100). Persisted so the UI starts on the
     # user's preferred intensity instead of resetting to 100 every reload.
     default_jd_intensity: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    # Global "Use memory" preference. Persisted so the toggle is remembered
+    # across chats, sessions, and reloads. NULL → fall back to baseline (on).
+    memory_enabled: Mapped[bool | None] = mapped_column(Boolean, default=None, nullable=True)
     # Per-user section/field enable map. Shape:
     #   {"sections": {"languages": false, ...}, "fields": {"personal_info.website": false, ...}}
     # Missing keys default to enabled.

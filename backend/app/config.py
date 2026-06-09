@@ -44,6 +44,9 @@ class Settings(BaseSettings):
     # Remembered JD-tailoring slider value (0–100). DB overlay populates this
     # at runtime — the .env baseline is None so the UI defaults to 100%.
     default_jd_intensity: Optional[int] = None
+    # Global "Use memory" default. Baseline ON; the DB overlay flips it when the
+    # user toggles the pill, and the value persists across chats/sessions.
+    memory_enabled: bool = True
 
     # ── Optional Basic Auth (single admin user) ────────────────────────────
     # When AUTH_ENABLED=true, every /api/* request requires HTTP Basic auth

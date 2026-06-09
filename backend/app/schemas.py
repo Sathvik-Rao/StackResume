@@ -22,6 +22,14 @@ class CreateSessionRequest(BaseModel):
     llm_model: Optional[str] = None
 
 
+class CreateSessionFromMasterRequest(BaseModel):
+    # Which master resume to seed the new chat with. None → the default master
+    # (or the only/earliest one if none is explicitly marked default).
+    master_id: Optional[str] = None
+    llm_provider: Optional[str] = None
+    llm_model: Optional[str] = None
+
+
 class UpdateSessionRequest(BaseModel):
     title: Optional[str] = None
     llm_provider: Optional[str] = None
@@ -100,6 +108,7 @@ class SendMessageRequest(BaseModel):
     jd_text: Optional[str] = None             # job description for tailoring
     jd_intensity: Optional[int] = None        # 0–100; how aggressively to tailor to the JD (100 = full rewrite, 0 = barely touch the resume)
     attached_resume: Optional[dict] = None    # uploaded JSON resume to start from / refine
+    from_master_name: Optional[str] = None    # name of the master resume this turn was seeded from (for the "sources" note)
     use_memory: Optional[bool] = True         # apply persistent profile memory to this turn
     llm_provider: Optional[str] = None
     llm_model: Optional[str] = None

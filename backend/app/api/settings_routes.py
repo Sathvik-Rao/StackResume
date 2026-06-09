@@ -36,6 +36,8 @@ class AppSettingsUpsert(BaseModel):
     max_review_iterations: Optional[int] = None
     min_quality_score: Optional[float] = None
     default_jd_intensity: Optional[int] = None
+    # Global "Use memory" preference — persisted across chats/sessions.
+    memory_enabled: Optional[bool] = None
     # {"sections": {key: bool}, "fields": {"section.field": bool}} — missing = enabled
     section_preferences: Optional[dict] = None
 
