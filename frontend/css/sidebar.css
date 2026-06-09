@@ -10,8 +10,10 @@
 .sb-resizer:hover::after,body.sb-resizing .sb-resizer::after{background:var(--ab)}
 #sb.collapsed .sb-resizer{display:none}
 body.sb-resizing{cursor:col-resize;user-select:none}
-.sb-expand{position:absolute;left:8px;top:62px;z-index:30;width:34px;height:34px;background:var(--bg3);border:1px solid var(--border2);border-radius:9px;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
-.sb-expand:hover{background:var(--bg4);color:var(--text)}
+/* Lives in the toolbar; hidden until the sidebar is collapsed (toggleSidebar
+   flips display to flex). Sits where the mobile menu button does. */
+.sb-expand{display:none;width:34px;height:34px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--text2);cursor:pointer;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s}
+.sb-expand:hover{background:var(--bg3);color:var(--text)}
 .sb-collapse{margin-left:auto;background:none;border:none;color:var(--text3);cursor:pointer;padding:4px 6px;border-radius:6px;display:flex;align-items:center;justify-content:center}
 .sb-collapse:hover{color:var(--text);background:var(--bg3)}
 .sb-head{padding:18px 14px 12px;border-bottom:1px solid var(--border)}

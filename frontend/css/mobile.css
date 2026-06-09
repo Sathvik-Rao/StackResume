@@ -1,21 +1,29 @@
 /* Responsive overrides — small viewports up to 700px, narrow phones up to 400px. */
 @media(max-width:700px){
-  /* Sidebar becomes a slide-in drawer */
+  /* Sidebar becomes a slide-in drawer. Use a comfortable fixed width rather than
+     --sw: on a phone-width viewport the desktop resize logic clamps --sw down to
+     its 200px minimum, which collapses the session-name column to a few pixels. */
   #sb{
     position:fixed;top:0;left:0;
     height:100vh;height:100dvh;
     z-index:100;
-    width:var(--sw)!important;min-width:var(--sw)!important;
+    width:min(86vw,330px)!important;min-width:0!important;
     transform:translateX(-100%);
     transition:transform .22s ease;
     overflow:hidden;
   }
   #sb.mobile-open{transform:translateX(0)!important}
-  #sb.collapsed{transform:translateX(-100%)!important;width:var(--sw)!important;min-width:var(--sw)!important}
+  #sb.collapsed{transform:translateX(-100%)!important;width:min(86vw,330px)!important;min-width:0!important}
   .sb-expand{display:none!important}
   /* No edge-resizing in the mobile drawer. */
   .sb-resizer{display:none!important}
   .mob-menu-btn{display:flex}
+
+  /* Touch has no hover, so the per-row actions (favorite / tracker / rename /
+     delete) would otherwise stay invisible yet still reserve width, squeezing
+     the session title. Reveal them and let the title truncate cleanly. */
+  .si-act{opacity:1}
+  .si-meta{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
   /* Main fills the full screen — dvh keeps it within the actual visible area on iOS */
   #main{

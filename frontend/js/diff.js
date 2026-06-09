@@ -113,28 +113,111 @@ function _diffWords(a,b){
   return parts.map(p=>p.t==='='?esc(p.v):p.t==='+'?`<span class="df-add">${esc(p.v)}</span>`:`<span class="df-del">${esc(p.v)}</span>`).join('');
 }
 
-function _buildDiffHtml(a,b){
-  const secs=[];
-  const check=(title,va,vb)=>{if(va!==vb)secs.push({title,html:_diffText(va||'',vb||'')});};
+// ── Section serializers ───────────────────────────────────────────────────────
+// Turn each resume section into diff-friendly plain text: one logical entry per
+// block, with a blank line between blocks so the line-diff aligns whole entries.
+// A section/entry present only in the new version reads as all-added (green);
+// one dropped from the new version reads as all-removed (red). Field ordering
+// mirrors the preview so the diff reads naturally. ss()/toArr() come from
+// preview.js and coerce the LLM's loose field shapes.
+const _j=(arr,sep)=>arr.filter(x=>x!=null&&x!=='').join(sep);
 
+function _seEdu(list){return toArr(list).map(e=>{
+  const deg=ss(e.degree)+(ss(e.field_of_study)?` in ${ss(e.field_of_study)}`:'');
+  const L=[_j([deg,ss(e.institution),ss(e.location),_j([ss(e.start_date),ss(e.end_date)],' – ')],'  ·  ')];
+  if(ss(e.gpa))L.push('GPA: '+ss(e.gpa));
+  if(ss(e.honors))L.push(ss(e.honors));
+  const cw=toArr(e.relevant_coursework).map(ss).filter(Boolean);if(cw.length)L.push('Coursework: '+cw.join(', '));
+  const ac=toArr(e.activities).map(ss).filter(Boolean);if(ac.length)L.push('Activities: '+ac.join(', '));
+  return L.join('\n');
+}).join('\n\n');}
+
+function _seProjects(list){return toArr(list).map(p=>{
+  const L=[_j([ss(p.name),ss(p.role),ss(p.type),_j([ss(p.start_date),ss(p.end_date)],' – ')],'  ·  ')];
+  if(ss(p.description))L.push(ss(p.description));
+  const tech=toArr(p.technologies).map(ss).filter(Boolean);if(tech.length)L.push('Tech: '+tech.join(', '));
+  toArr(p.highlights).map(ss).filter(Boolean).forEach(h=>L.push('• '+h));
+  const url=ss(p.url)||ss(p.github);if(url)L.push(url);
+  return L.join('\n');
+}).join('\n\n');}
+
+function _seOSS(list){return toArr(list).map(o=>{
+  const L=[_j([ss(o.project),ss(o.role),ss(o.language),ss(o.stars)?'★ '+ss(o.stars):''],'  ·  ')];
+  if(ss(o.description))L.push(ss(o.description));
+  toArr(o.contributions).map(ss).filter(Boolean).forEach(c=>L.push('• '+c));
+  if(ss(o.url))L.push(ss(o.url));
+  return L.join('\n');
+}).join('\n\n');}
+
+function _seCerts(list){return toArr(list).map(c=>{
+  const d=[];if(ss(c.date))d.push('issued '+ss(c.date));if(ss(c.expiry))d.push('expires '+ss(c.expiry));
+  return _j([ss(c.name),ss(c.issuer),d.join(', '),ss(c.credential_id)?'ID '+ss(c.credential_id):'',ss(c.url)],'  ·  ');
+}).join('\n');}
+
+function _sePubs(list){return toArr(list).map(p=>
+  _j([ss(p.title),ss(p.type),ss(p.venue),ss(p.date),toArr(p.authors).map(ss).filter(Boolean).join(', '),ss(p.url)],'  ·  ')
+).join('\n');}
+
+function _sePatents(list){return toArr(list).map(p=>{
+  const L=[_j([ss(p.title),ss(p.patent_number),ss(p.date)],'  ·  ')];
+  if(ss(p.description))L.push(ss(p.description));
+  return L.join('\n');
+}).join('\n\n');}
+
+function _seVol(list){return toArr(list).map(v=>{
+  const L=[_j([ss(v.role),ss(v.organization),_j([ss(v.start_date),ss(v.end_date)],' – ')],'  ·  ')];
+  if(ss(v.description))L.push(ss(v.description));
+  return L.join('\n');
+}).join('\n\n');}
+
+function _seLangs(list){return toArr(list).map(l=>
+  typeof l==='string'?l:_j([ss(l.language),ss(l.proficiency)?`(${ss(l.proficiency)})`:''],' ')
+).join('\n');}
+
+function _seContact(r){const pi=r.personal_info||{};
+  return _j([ss(pi.full_name),ss(pi.professional_title),ss(pi.email),ss(pi.phone),ss(pi.location),ss(pi.linkedin),ss(pi.github),ss(pi.website)||ss(pi.portfolio)],'\n');
+}
+
+function _buildDiffHtml(a,b){
+  a=a||{};b=b||{};
+  const secs=[];
+  const check=(title,va,vb)=>{if((va||'')!==(vb||''))secs.push({title,html:_diffText(va||'',vb||'')});};
+
+  check('Contact',_seContact(a),_seContact(b));
   check('Professional Summary',a.professional_summary,b.professional_summary);
 
-  const ccA=(a.core_competencies||[]).join(', ');
-  const ccB=(b.core_competencies||[]).join(', ');
+  const ccA=toArr(a.core_competencies).map(ss).filter(Boolean).join(', ');
+  const ccB=toArr(b.core_competencies).map(ss).filter(Boolean).join(', ');
   check('Core Competencies',ccA,ccB);
 
-  const expB=b.experience||[];
-  const expA=a.experience||[];
-  expB.forEach((job,idx)=>{
-    const pj=expA[idx];
-    const txtA=pj?[...(pj.responsibilities||[]),...(pj.achievements||[])].join('\n'):'';
-    const txtB=[...(job.responsibilities||[]),...(job.achievements||[])].join('\n');
-    if(txtA!==txtB)secs.push({title:`Experience — ${job.title} @ ${job.company}`,html:_diffText(txtA,txtB)});
-  });
+  // Experience — per job, so a small wording tweak in one bullet doesn't light up
+  // the whole section. Walking the longer of the two lists also surfaces jobs
+  // added to (or removed from) the new version, not just edited ones.
+  const expA=a.experience||[],expB=b.experience||[];
+  for(let i=0;i<Math.max(expA.length,expB.length);i++){
+    const pj=expA[i],nj=expB[i],job=nj||pj;
+    const txtA=pj?[...toArr(pj.responsibilities),...toArr(pj.achievements)].map(ss).join('\n'):'';
+    const txtB=nj?[...toArr(nj.responsibilities),...toArr(nj.achievements)].map(ss).join('\n'):'';
+    if(txtA!==txtB)secs.push({title:`Experience — ${ss(job.title)} @ ${ss(job.company)}`,html:_diffText(txtA,txtB)});
+  }
 
-  const skA=Object.values(a.technical_skills||{}).flat().join(', ');
-  const skB=Object.values(b.technical_skills||{}).flat().join(', ');
+  const skA=Object.values(a.technical_skills||{}).flat().map(ss).join(', ');
+  const skB=Object.values(b.technical_skills||{}).flat().map(ss).join(', ');
   check('Technical Skills',skA,skB);
+
+  // Remaining sections — these were previously never compared, so newly added
+  // entries/sections (a fresh Projects list, a new certification, etc.) silently
+  // failed to appear in the diff.
+  check('Projects',_seProjects(a.projects),_seProjects(b.projects));
+  check('Open Source',_seOSS(a.open_source_contributions),_seOSS(b.open_source_contributions));
+  check('Education',_seEdu(a.education),_seEdu(b.education));
+  check('Certifications',_seCerts(a.certifications),_seCerts(b.certifications));
+  check('Publications',_sePubs(a.publications),_sePubs(b.publications));
+  check('Patents',_sePatents(a.patents),_sePatents(b.patents));
+  check('Awards & Honors',toArr(a.awards_and_honors).map(ss).filter(Boolean).join('\n'),toArr(b.awards_and_honors).map(ss).filter(Boolean).join('\n'));
+  check('Volunteer Experience',_seVol(a.volunteer_experience),_seVol(b.volunteer_experience));
+  check('Languages',_seLangs(a.languages),_seLangs(b.languages));
+  check('Interests',toArr(a.interests).map(ss).filter(Boolean).join(', '),toArr(b.interests).map(ss).filter(Boolean).join(', '));
 
   const metaA=a.metadata||{},metaB=b.metadata||{};
   const scoreKeys=['overall_score','ats_score','quality_score','impact_score'];
