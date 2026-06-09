@@ -34,6 +34,10 @@ function _updateMasterUI(){
   // Sidebar footer badge
   const badge=document.getElementById('master-sb-badge');
   if(badge)badge.style.display=has?'':'none';
+  // Sidebar "New from Master" split-button (only useful once a master exists)
+  const nfm=document.getElementById('nfm-wrap');
+  if(nfm)nfm.style.display=has?'':'none';
+  if(!has)_hideNfmMenu();
   // Data Management section
   const dmTitle=document.getElementById('dm-master-title');
   if(dmTitle){
@@ -367,7 +371,7 @@ function attachMasterById(id){
   _hideMasterAttachMenu();
   const it=_masterResumes.find(x=>x.id===id);
   if(!it){showToast('Master resume not found');return;}
-  attachedResume={kind:'json',resume:it.resume,filename:`master_${(it.name||'resume').replace(/\s+/g,'_')}.json`,fromMaster:true};
+  attachedResume={kind:'json',resume:it.resume,filename:`master_${(it.name||'resume').replace(/\s+/g,'_')}.json`,fromMaster:true,masterName:it.name||'Master Resume'};
   document.getElementById('att-ic').innerHTML='<svg class="ic"><use href="#ic-star"/></svg>';
   document.getElementById('att-label').textContent=it.name||'Master Resume';
   document.getElementById('att-meta').textContent='JSON';
@@ -380,6 +384,87 @@ function attachMasterById(id){
 function closeMasterAttachAndOpenModal(){
   _hideMasterAttachMenu();
   openMasterModal();
+}
+
+// ── New chat seeded from a master (verbatim — no AI edits) ───────────────────
+// Creates a fresh chat whose first resume version IS the master, untouched, so
+// you can edit on top of it (or just fill the application tracker) without
+// re-running the pipeline. With no id: uses the only master, else the default.
+async function newChatFromMaster(id){
+  _hideMasterAttachMenu();
+  _hideNfmMenu();
+  let masterId=id||null;
+  if(!masterId){
+    if(_masterResumes.length===0){showToast('No master resumes saved yet');return;}
+    if(_masterResumes.length===1)masterId=_masterResumes[0].id;
+    else masterId=(_defaultMaster()||{}).id||null;
+  }
+  try{
+    const r=await fetch(`${API}/api/sessions/from-master`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({master_id:masterId,llm_provider:curProv,llm_model:curModel}),
+    });
+    if(!r.ok){const e=await r.json().catch(()=>({detail:'Failed to create chat'}));throw new Error(e.detail||'Failed to create chat');}
+    const sess=await r.json();
+    closeViewMaster();
+    await _refreshSessions();   // surface the new chat at the top of the sidebar
+    await loadSession(sess.id); // …and open it
+    showToast('⭐ New chat from master — edit away');
+  }catch(e){showToast('⚠ '+e.message);}
+}
+
+// ── "New from Master" caret dropdown — pick a specific master (≥1 saved) ──────
+// The split button's main half uses the default master; this menu lists them
+// all (rendered into <body> with position:fixed so the sidebar can't clip it).
+function _ensureNfmMenu(){
+  let menu=document.getElementById('nfm-menu');
+  if(!menu){
+    menu=document.createElement('div');
+    menu.id='nfm-menu';
+    menu.style.cssText='display:none;position:fixed;min-width:240px;max-width:340px;background:var(--bg2);border:1px solid var(--border2);border-radius:9px;box-shadow:var(--shadow-md);padding:4px;z-index:1500;max-height:320px;overflow-y:auto';
+    document.body.appendChild(menu);
+  }
+  return menu;
+}
+
+function toggleNewFromMasterMenu(ev){
+  if(ev)ev.stopPropagation();
+  if(_masterResumes.length===0){showToast('No master resumes saved yet');return;}
+  const caret=document.getElementById('nfm-caret');
+  const menu=_ensureNfmMenu();
+  if(menu.dataset.open==='1'){_hideNfmMenu();return;}
+  menu.innerHTML=`<div style="padding:6px 10px;font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">New chat from…</div>`+
+    _masterResumes.map(it=>`<button class="vm-menu-item" onclick="newChatFromMaster('${it.id}')" data-id="${it.id}">
+      <span style="opacity:${it.is_default?1:0.35}">${it.is_default?'⭐':'☆'}</span>
+      <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(it.name||'Untitled')}</span>
+    </button>`).join('');
+  // Anchor to the caret; open downward if there's room, else upward.
+  const r=caret.getBoundingClientRect();
+  menu.style.visibility='hidden';menu.style.display='block';menu.style.top='0px';menu.style.left='0px';
+  const mh=menu.offsetHeight,mw=menu.offsetWidth;
+  const spaceBelow=window.innerHeight-r.bottom,spaceAbove=r.top;
+  const top=(spaceBelow>=mh+8||spaceBelow>spaceAbove)?Math.min(window.innerHeight-mh-8,r.bottom+6):Math.max(8,r.top-mh-6);
+  const left=Math.max(8,Math.min(window.innerWidth-mw-8,r.right-mw));
+  menu.style.top=`${top}px`;menu.style.left=`${left}px`;menu.style.visibility='';
+  menu.dataset.open='1';
+  if(caret)caret.classList.add('on');
+  document.addEventListener('click',_onNfmClickAway);
+}
+
+function _onNfmClickAway(ev){
+  const wrap=document.getElementById('nfm-wrap');
+  const menu=document.getElementById('nfm-menu');
+  if(wrap&&wrap.contains(ev.target))return;
+  if(menu&&menu.contains(ev.target))return;
+  _hideNfmMenu();
+}
+
+function _hideNfmMenu(){
+  const menu=document.getElementById('nfm-menu');
+  if(menu){menu.style.display='none';menu.dataset.open='0';}
+  const caret=document.getElementById('nfm-caret');
+  if(caret)caret.classList.remove('on');
+  document.removeEventListener('click',_onNfmClickAway);
 }
 
 // Stable entry points called from sidebar and data-mgmt.

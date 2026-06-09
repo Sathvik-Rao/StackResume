@@ -191,3 +191,34 @@ async def test_session_title_auto_updates_from_resume(async_client, fake_llm):
 
     detail = (await async_client.get(f"/api/sessions/{sid}")).json()
     assert "Test Person" in detail["title"]
+
+
+async def test_reply_notes_master_and_memory_sources(async_client, fake_llm):
+    """The generated reply records that the master resume + profile memory were
+    used, so it's clear on a later read what fed the generation."""
+    # Seed a profile so "use memory" actually loads something (else it's a no-op).
+    await async_client.put("/api/memory", json={"full_name": "Ada Lovelace"})
+    sid = await _create_session(async_client)
+    r = await async_client.post(
+        f"/api/sessions/{sid}/messages",
+        json={"content": "Senior Python dev", "from_master_name": "Backend Master",
+              "use_memory": True},
+    )
+    final = await _poll_until_done(async_client, r.json()["assistant_message_id"])
+    assert final["status"] == "complete"
+    assert final["resume_json"] is not None
+    content = final["content"]
+    assert "Backend Master" in content
+    assert "profile memory" in content.lower()
+
+
+async def test_reply_omits_sources_when_none_used(async_client, fake_llm):
+    """No master + memory off → no sources note clutters the reply."""
+    sid = await _create_session(async_client)
+    r = await async_client.post(
+        f"/api/sessions/{sid}/messages",
+        json={"content": "Senior Python dev", "use_memory": False},
+    )
+    final = await _poll_until_done(async_client, r.json()["assistant_message_id"])
+    assert final["resume_json"] is not None
+    assert "Generated using" not in final["content"]

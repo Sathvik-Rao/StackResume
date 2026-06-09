@@ -120,3 +120,78 @@ async def test_session_app_status_fields(async_client):
     assert detail["app_status"] == "applied"
     assert detail["notes"] == "Followed up via LinkedIn."
     assert detail["apply_url"] == "https://example.com/careers/123"
+
+
+# ── New chat from master (verbatim seed, no pipeline) ─────────────────────────
+
+async def _create_master(async_client, resume, name=None, is_default=False) -> dict:
+    body = {"resume": resume, "is_default": is_default}
+    if name is not None:
+        body["name"] = name
+    r = await async_client.post("/api/memory/master-resumes", json=body)
+    assert r.status_code == 200, r.text
+    return r.json()
+
+
+async def test_from_master_no_master_404(async_client):
+    r = await async_client.post("/api/sessions/from-master", json={})
+    assert r.status_code == 404
+
+
+async def test_from_master_seeds_resume_verbatim(async_client, sample_resume):
+    await _create_master(async_client, sample_resume, name="Backend Master")
+
+    r = await async_client.post("/api/sessions/from-master", json={})
+    assert r.status_code == 201, r.text
+    sess = r.json()
+
+    # Title derived from the resume identity, not "New Resume".
+    assert sess["title"] == "Ada Lovelace — Senior Software Engineer"
+
+    # Seeded as a finished user + assistant pair, no processing.
+    roles = [m["role"] for m in sess["messages"]]
+    assert roles == ["user", "assistant"]
+    asst = sess["messages"][1]
+    assert asst["status"] == "complete"
+    # The resume is byte-for-byte the master — no AI edits.
+    assert asst["resume_json"] == sample_resume
+    assert asst["final_score"] == 88
+    # A synthetic trace marks it as a verbatim load (no LLM agents ran).
+    agents = [e["agent"] for e in (asst["progress_events"] or [])]
+    assert agents == ["Master Resume"]
+
+
+async def test_from_master_explicit_id_overrides_default(async_client, sample_resume, minimal_resume):
+    # First master becomes default automatically; second is explicit, non-default.
+    await _create_master(async_client, sample_resume, name="Default One")
+    second = await _create_master(async_client, minimal_resume, name="Picked One")
+
+    r = await async_client.post(
+        "/api/sessions/from-master", json={"master_id": second["id"]}
+    )
+    assert r.status_code == 201, r.text
+    asst = r.json()["messages"][1]
+    assert asst["resume_json"] == minimal_resume
+
+
+async def test_from_master_unknown_id_404(async_client, sample_resume):
+    await _create_master(async_client, sample_resume)
+    r = await async_client.post(
+        "/api/sessions/from-master", json={"master_id": "nope"}
+    )
+    assert r.status_code == 404
+
+
+async def test_from_master_deep_copies_resume(async_client, sample_resume):
+    """Editing the seeded chat's resume must not mutate the stored master."""
+    master = await _create_master(async_client, sample_resume, name="Immutable")
+    sess = (await async_client.post("/api/sessions/from-master", json={})).json()
+    msg_id = sess["messages"][1]["id"]
+
+    edited = dict(sample_resume)
+    edited["professional_summary"] = "MUTATED"
+    await async_client.patch(f"/api/messages/{msg_id}/resume", json={"resume_json": edited})
+
+    stored = (await async_client.get(f"/api/memory/master-resumes/{master['id']}")).json()
+    assert stored["resume"]["professional_summary"] == sample_resume["professional_summary"]
+    assert stored["resume"]["professional_summary"] != "MUTATED"

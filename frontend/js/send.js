@@ -38,10 +38,12 @@ async function sendMsg(){
   let finalContent=content;
   let attachedJson=null;
   let attachLabel=null;
+  let fromMasterName=null;
   if(attachedResume){
     if(attachedResume.kind==='json'&&attachedResume.resume){
       attachedJson=attachedResume.resume;
       attachLabel=`JSON · ${attachedResume.filename||'resume.json'}`;
+      if(attachedResume.fromMaster)fromMasterName=attachedResume.masterName||'Master Resume';
     }else if(attachedResume.kind==='text'&&attachedResume.text){
       const trimmed=attachedResume.text.length>14000?attachedResume.text.slice(0,14000)+'\n…[truncated]':attachedResume.text;
       finalContent=`[ATTACHED RESUME — extracted from ${attachedResume.filename||'upload'}]\n${trimmed}\n[END ATTACHED RESUME]\n\n${content}`;
@@ -73,7 +75,7 @@ async function sendMsg(){
   try{
     const r=await fetch(`${API}/api/sessions/${sessionId}/messages`,{
       method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({content:finalContent,jd_text:jdText||null,jd_intensity:jdIntensity,attached_resume:submitAttached,use_memory:isMemoryOn(),llm_provider:curProv,llm_model:curModel})});
+      body:JSON.stringify({content:finalContent,jd_text:jdText||null,jd_intensity:jdIntensity,attached_resume:submitAttached,from_master_name:fromMasterName,use_memory:isMemoryOn(),llm_provider:curProv,llm_model:curModel})});
     if(!r.ok)throw new Error(`HTTP ${r.status}`);
     const d=await r.json();
 

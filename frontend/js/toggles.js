@@ -1,12 +1,29 @@
-// ── Memory toggle ───────────────────────────────────────────────────────────
+// ── Memory toggle (global, persisted across chats/sessions) ──────────────────
 function toggleMemPill(){
   const el=document.getElementById('mem-toggle');
   const willBeOn=el.classList.contains('off');
   el.classList.toggle('on',willBeOn);
   el.classList.toggle('off',!willBeOn);
+  _saveMemoryPref(willBeOn);
 }
 function isMemoryOn(){
   return document.getElementById('mem-toggle').classList.contains('on');
+}
+// Reflect the persisted global preference (default ON when unset/null).
+function applyMemoryPref(enabled){
+  const el=document.getElementById('mem-toggle');
+  if(!el)return;
+  const on=enabled!==false;
+  el.classList.toggle('on',on);
+  el.classList.toggle('off',!on);
+}
+// Persist the preference to the backend so it survives reloads and applies to
+// every chat. Fire-and-forget — the toggle is already updated in the DOM.
+function _saveMemoryPref(on){
+  fetch(`${API}/api/app-settings`,{
+    method:'PUT',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({memory_enabled:!!on}),
+  }).catch(()=>{});
 }
 
 // ── JD toggle ───────────────────────────────────────────────────────────────

@@ -142,11 +142,13 @@ function renderDone(c,msg){
     return;
   }
   const agMap={};trace.forEach(e=>{agMap[e.agent]=e;});
+  let _nSteps=0;
   let stepsHtml=`<div class="prog-panel" style="margin-bottom:14px">
     <div class="prog-hdr" style="color:var(--green)">${ico('ic-check')} Pipeline complete</div>
     <div class="step-list">`;
   STEPS.forEach(step=>{
     const ev=agMap[step.agent];if(!ev)return;
+    _nSteps++;
     const cls=ev.status==='complete'?'done':ev.status==='error'?'err':'pend';
     const ic=cls==='done'?ico('ic-check'):ico('ic-x');
     let llmHtml='';
@@ -163,6 +165,9 @@ function renderDone(c,msg){
         <div class="snotes">${esc(ev.notes||step.desc)}</div>${llmHtml}</div></div>`;
   });
   stepsHtml+='</div></div>';
+  // A verbatim "from master" seed has no pipeline agents to show — skip the
+  // (otherwise empty) "Pipeline complete" panel for it.
+  if(_nSteps===0)stepsHtml='';
 
   let scHtml='';
   if(meta.overall_score!==undefined){
@@ -186,9 +191,19 @@ function renderDone(c,msg){
         _resumeVersions[sid].push({id:msg.id,resume});
       const versions=_resumeVersions[sid];
       const myIdx=versions.findIndex(v=>v.id===msg.id);
-      if(myIdx>0){
-        const jvr=c.querySelector('.jv-r');
-        if(jvr){
+      const jvr=c.querySelector('.jv-r');
+      if(jvr){
+        // Compare this resume version against a saved master reference.
+        if(typeof _masterResumes!=='undefined' && _masterResumes.length){
+          const mbtn=document.createElement('button');
+          mbtn.className='ibtn cmp';
+          mbtn.innerHTML=ico('ic-compare')+` Compare to Master`;
+          mbtn.title='Compare this resume against your master resume — see what changed';
+          mbtn.onclick=()=>openDiffVsMaster(msg.id);
+          jvr.prepend(mbtn);
+        }
+        // Version-to-version diff (only once a previous version exists).
+        if(myIdx>0){
           const btn=document.createElement('button');
           btn.className='ibtn cmp';
           btn.innerHTML=ico('ic-refresh')+` v${myIdx}→v${myIdx+1}`;

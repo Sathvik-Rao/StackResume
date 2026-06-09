@@ -56,6 +56,7 @@ _MIGRATIONS: list[tuple[str, str, str]] = [
     ("app_settings", "default_jd_intensity", "ALTER TABLE app_settings ADD COLUMN default_jd_intensity INTEGER"),
     ("app_settings", "section_preferences", "ALTER TABLE app_settings ADD COLUMN section_preferences JSON"),
     ("app_settings", "openai_base_url", "ALTER TABLE app_settings ADD COLUMN openai_base_url VARCHAR(500)"),
+    ("app_settings", "memory_enabled", "ALTER TABLE app_settings ADD COLUMN memory_enabled BOOLEAN"),
 ]
 
 

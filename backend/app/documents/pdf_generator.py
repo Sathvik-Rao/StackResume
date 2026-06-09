@@ -817,7 +817,7 @@ def _ensure_fa_fonts() -> bool:
 _FA_ICONS = {
     "phone":    ("FA-Solid", ""),   # faPhone (handset)
     "email":    ("FA-Solid", ""),   # faEnvelope (solid)
-    "location": ("FA-Solid", ""),   # faMapMarker (solid teardrop)
+    "location": ("FA-Solid", ""),   # faMapMarkerAlt / location-dot (pin with cutout)
     "linkedin": ("FA-Brands", ""),  # faLinkedin
     "github":   ("FA-Brands", ""),  # faGithub
     "web":      ("FA-Solid", ""),   # faGlobe

@@ -39,9 +39,8 @@ async function init(){
     document.getElementById('sb').classList.add('collapsed');
     document.getElementById('sb-expand').style.display='flex';
   }
-  // Pull live server defaults so the pill shows what'll actually run
+  // Pull live server defaults (provider/model, JD slider, memory pref) in one go
   await loadServerDefaults();
-  loadJdIntensityDefault();
   updProvPill();
   await loadSessions();
   await loadMemoryChip();
@@ -64,27 +63,24 @@ function _scheduleSessionRefreshIfNeeded(){
 }
 
 async function loadServerDefaults(){
-  // Only override localStorage if user hasn't picked anything yet
-  if(localStorage.getItem('sr_p')&&localStorage.getItem('sr_m'))return;
+  // One fetch for every server-side default applied on bootstrap.
   try{
     const r=await fetch(`${API}/api/app-settings`);
     if(!r.ok)return;
     const s=await r.json();
-    if(s.llm_provider)curProv=s.llm_provider;
-    if(s.llm_model)curModel=s.llm_model;
-  }catch(e){}
-}
-
-async function loadJdIntensityDefault(){
-  try{
-    const r=await fetch(`${API}/api/app-settings`);
-    if(!r.ok)return;
-    const s=await r.json();
-    if(s.default_jd_intensity==null)return;
-    const v=Math.max(0,Math.min(100,parseInt(s.default_jd_intensity,10)));
-    if(isNaN(v))return;
-    const sl=document.getElementById('jd-intensity');
-    if(sl){sl.value=v;updateJdIntensityUI();}
+    // Adopt the server provider/model only if the user hasn't picked one yet.
+    if(!(localStorage.getItem('sr_p')&&localStorage.getItem('sr_m'))){
+      if(s.llm_provider)curProv=s.llm_provider;
+      if(s.llm_model)curModel=s.llm_model;
+    }
+    // Remembered JD-tailoring slider
+    if(s.default_jd_intensity!=null){
+      const v=Math.max(0,Math.min(100,parseInt(s.default_jd_intensity,10)));
+      const sl=document.getElementById('jd-intensity');
+      if(sl&&!isNaN(v)){sl.value=v;updateJdIntensityUI();}
+    }
+    // Global "Use memory" preference (persisted across chats/sessions)
+    applyMemoryPref(s.memory_enabled);
   }catch(e){}
 }
 

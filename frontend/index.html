@@ -71,6 +71,8 @@
   <symbol id="ic-zap" viewBox="0 0 24 24"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z"/></symbol>
   <symbol id="ic-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></symbol>
   <symbol id="ic-star" viewBox="0 0 24 24"><path d="m12 2 3.09 6.26 6.91 1-5 4.87 1.18 6.88L12 17.77l-6.18 3.24L7 14.13 2 9.26l6.91-1L12 2Z"/></symbol>
+  <symbol id="ic-compare" viewBox="0 0 24 24"><rect x="3" y="4" width="7" height="16" rx="1"/><rect x="14" y="4" width="7" height="16" rx="1"/></symbol>
+  <symbol id="ic-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
   <symbol id="ic-star-fill" viewBox="0 0 24 24"><path d="m12 2 3.09 6.26 6.91 1-5 4.87 1.18 6.88L12 17.77l-6.18 3.24L7 14.13 2 9.26l6.91-1L12 2Z" fill="currentColor"/></symbol>
   <symbol id="ic-message" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></symbol>
   <symbol id="ic-bookmark" viewBox="0 0 24 24"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2Z"/></symbol>
@@ -102,6 +104,15 @@
       <svg class="ic sm"><use href="#ic-plus"/></svg>
       <span class="sb-label">New Resume</span>
     </button>
+    <div id="nfm-wrap" class="nfm-split" style="display:none">
+      <button id="new-from-master-btn" class="nfm-main" onclick="newChatFromMaster()" title="New chat from your default master resume — loaded as-is, no AI changes">
+        <svg class="ic sm"><use href="#ic-star"/></svg>
+        <span class="sb-label">New from Master</span>
+      </button>
+      <button id="nfm-caret" class="nfm-caret" onclick="toggleNewFromMasterMenu(event)" title="Pick which master resume to start from" aria-label="Pick which master resume to start from">
+        <svg class="ic sm"><use href="#ic-chevron-down"/></svg>
+      </button>
+    </div>
     <div class="sb-search">
       <svg class="ic sm sb-search-ic"><use href="#ic-search"/></svg>
       <input type="text" id="sb-search" placeholder="Search chats…" oninput="filterSessions()">
@@ -734,6 +745,7 @@
             <div id="vm-role" style="font-size:12px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
           </div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
+            <button class="bsec" onclick="newChatFromMaster(_selectedMasterId)" title="Open a new chat seeded with this master resume, unchanged — edit on top of it"><svg class="ic" style="width:13px;height:13px"><use href="#ic-plus"/></svg> New chat</button>
             <button class="bsec" onclick="replaceSelectedMaster()" title="Replace this resume's JSON from a file"><svg class="ic" style="width:13px;height:13px"><use href="#ic-attach"/></svg> Replace</button>
             <button class="bsec" onclick="copyMasterJson()"><svg class="ic" style="width:13px;height:13px"><use href="#ic-copy"/></svg> Copy JSON</button>
             <button class="bsec" onclick="downloadMasterJson()"><svg class="ic" style="width:13px;height:13px"><use href="#ic-download"/></svg> JSON</button>
@@ -802,6 +814,10 @@
     <button class="mx" onclick="closeDiff()">×</button>
     <div class="modal-title" style="margin-bottom:4px"><svg class="ic" style="margin-right:6px"><use href="#ic-refresh"/></svg>Resume Changes <span id="diff-ver" style="font-size:13px;color:var(--text3);font-weight:400;margin-left:4px"></span></div>
     <div style="font-size:11px;color:var(--text3);margin-bottom:16px;flex-shrink:0"><span class="df-del">removed</span> &nbsp;·&nbsp; <span class="df-add">added</span></div>
+    <div id="diff-master-row" style="display:none;margin-bottom:16px;flex-shrink:0;align-items:center;gap:8px">
+      <span style="font-size:12px;color:var(--text3);white-space:nowrap">Compare against master:</span>
+      <select id="diff-master-pick" class="fi" onchange="_renderMasterDiff()" style="font-size:12px;padding:4px 8px;min-width:0;flex:1;max-width:320px"></select>
+    </div>
     <div id="diff-body" style="overflow-y:auto;flex:1;padding-right:4px"></div>
   </div>
 </div>

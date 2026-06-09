@@ -54,6 +54,26 @@ async def test_reset_settings_drops_overlay(async_client):
     assert body["max_review_iterations"] == 3
 
 
+async def test_memory_enabled_persists(async_client):
+    """The global 'Use memory' preference round-trips through GET/PUT so the
+    toggle is remembered across chats, sessions, and reloads."""
+    # Turn it OFF — a bool False must persist (not be treated as "unset/clear").
+    r = await async_client.put("/api/app-settings", json={"memory_enabled": False})
+    assert r.json()["memory_enabled"] is False
+    assert (await async_client.get("/api/app-settings")).json()["memory_enabled"] is False
+    # And back ON.
+    r2 = await async_client.put("/api/app-settings", json={"memory_enabled": True})
+    assert r2.json()["memory_enabled"] is True
+    assert (await async_client.get("/api/app-settings")).json()["memory_enabled"] is True
+
+
+async def test_memory_enabled_defaults_on_after_reset(async_client):
+    """With no overlay, memory defaults ON (baseline)."""
+    await async_client.put("/api/app-settings", json={"memory_enabled": False})
+    await async_client.delete("/api/app-settings")  # drop overlay → baseline
+    assert (await async_client.get("/api/app-settings")).json()["memory_enabled"] is True
+
+
 async def test_test_provider_uses_fake_llm(async_client, fake_llm):
     """/api/app-settings/test should hit the LLM and echo back a sample."""
     # Make the (fake) generator respond to a custom prompt by overriding

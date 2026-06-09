@@ -27,7 +27,7 @@ _OVERLAY_FIELDS = (
     "ollama_base_url", "openai_base_url",
     "langsmith_api_key", "langsmith_project", "langsmith_tracing",
     "max_review_iterations", "min_quality_score",
-    "default_jd_intensity",
+    "default_jd_intensity", "memory_enabled",
 )
 
 

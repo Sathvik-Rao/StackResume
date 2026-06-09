@@ -141,18 +141,16 @@ async function newChat(){
   document.getElementById('tb-title').textContent='New Resume';
   syncToolbar();
   document.querySelectorAll('.si').forEach(e=>e.classList.remove('on'));
-  // Memory toggle is per-chat; new chats always start with it enabled.
-  const mt=document.getElementById('mem-toggle');
-  mt.classList.add('on');mt.classList.remove('off');
+  // "Use memory" is a global preference (loaded on bootstrap, persisted to the
+  // backend) — leave the toggle as the user set it, don't reset per chat.
   document.getElementById('mi').focus();
 }
 
 async function loadSession(id){
   closeMobileSidebar();
   curSession=id;
-  // Memory toggle resets to on for each chat (per-chat, not global).
-  const mt=document.getElementById('mem-toggle');
-  mt.classList.add('on');mt.classList.remove('off');
+  // "Use memory" is global (not per-chat) — the toggle keeps the user's
+  // persisted preference across chats; nothing to reset here.
   let session;
   try{
     const r=await fetch(`${API}/api/sessions/${id}`);
